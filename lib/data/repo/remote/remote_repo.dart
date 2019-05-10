@@ -59,9 +59,9 @@ class RemoteRepo {
   }*/
 
   void _initDio() {
-    /*BaseOptions baseOptions =
+    BaseOptions baseOptions =
         BaseOptions(connectTimeout: 6000, receiveTimeout: 6000);
-    _dioV3 = Dio(baseOptions.merge(baseUrl: "https://api.themoviedb.org/3"))
+    /*_dioV3 = Dio(baseOptions.merge(baseUrl: "https://api.themoviedb.org/3"))
       ..interceptors.add(InterceptorsWrapper(onRequest: (options) async {
         if (_apiKeyV3 == null) {
           return options;
