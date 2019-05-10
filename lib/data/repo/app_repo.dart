@@ -33,4 +33,9 @@ class AppRepo implements RemoteRepo, LocalRepo {
   Future<bool> saveAccessToken(String token) {
     return _localRepo.saveAccessToken(token);
   }
+
+  @override
+  Future<String> loadAccessToken() {
+    return _localRepo.loadAccessToken();
+  }
 }

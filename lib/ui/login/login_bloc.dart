@@ -5,7 +5,7 @@ class LoginBloc extends BlocBase {
   final AppRepo _repo;
   String _requestToken;
 
-  LoginBloc({repo}) : _repo = repo ?? AppRepo.repo;
+  LoginBloc({AppRepo repo}) : _repo = repo ?? AppRepo.repo;
 
   Future<String> generateRequestToken() {
     return _repo.createRequestToken().then((requestTokenRes) {

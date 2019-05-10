@@ -40,14 +40,19 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Container(),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          bool isLoginSuccess = await Navigator.of(context)
-              .push(MaterialPageRoute(builder: (context) {
-            return BlocProvider(
-              bloc: BlocProvider.of<LoginBloc>(context),
-              child: LoginWebViewPage(),
-            );
-          }));
-          isLoginSuccess ??= false;
+          bool isLoginSuccess = await Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, anim1, anim2) {
+                    return BlocProvider(
+                        bloc: LoginBloc(), child: LoginWebViewPage());
+                  },
+                  transitionsBuilder: (context, anim1, anim2, child) {
+                    return child;
+                  },
+                ),
+              ) ??
+              false;
           scaffoldKey.currentState.showSnackBar(SnackBar(
             content: Text(isLoginSuccess ? "Login Success!" : "Login failed!"),
           ));

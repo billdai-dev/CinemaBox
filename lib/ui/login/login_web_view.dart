@@ -1,9 +1,7 @@
-import 'dart:async';
-
 import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:cinema_box/ui/login/login_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappbrowser/flutter_inappbrowser.dart';
 
 class LoginWebViewPage extends StatefulWidget {
   @override
@@ -11,44 +9,61 @@ class LoginWebViewPage extends StatefulWidget {
 }
 
 class _LoginWebViewPageState extends State<LoginWebViewPage> {
-  static const String _authUrl =
+  static const String authUrl =
       "https://www.themoviedb.org/auth/access?request_token=";
 
-  Completer<WebViewController> webViewController = Completer();
-  Completer<String> requestToken = Completer();
+  bool isBrowserOpened = false;
+  InAppBrowser browser;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     LoginBloc bloc = BlocProvider.of<LoginBloc>(context);
-    requestToken.complete(bloc.generateRequestToken());
+    bloc.generateRequestToken().then((token) async {
+      await browser?.open(url: "$authUrl$token", options: {
+        "clearCache": true,
+        "toolbarTop": false,
+        "hideUrlBar": true,
+      });
+      setState(() => isBrowserOpened = true);
+    });
+    browser ??= _MyInAppBrowser(context, bloc);
+  }
+
+  @override
+  void dispose() {
+    browser?.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    LoginBloc bloc = BlocProvider.of<LoginBloc>(context);
+    //LoginBloc bloc = BlocProvider.of<LoginBloc>(context);
 
     return Scaffold(
-      body: WebView(
-        navigationDelegate: (navRequest) {
-          String nextUrl = navRequest.url;
-          if (nextUrl.contains("/auth/access/approve")) {
-            bloc.generateAccessToken().then((isSuccess) {
-              Navigator.of(context).pop(isSuccess);
-            });
-            /*Navigator.of(context).pop(true);
-            return NavigationDecision.prevent;*/
-          }
-          return NavigationDecision.navigate;
-        },
-        javascriptMode: JavascriptMode.unrestricted,
-        onWebViewCreated: (controller) {
-          webViewController.complete(controller);
-          requestToken.future.then((token) {
-            controller.loadUrl("$_authUrl$requestToken");
-          });
-        },
+      body: Container(
+        alignment: Alignment.center,
+        child: isBrowserOpened ? null : CircularProgressIndicator(),
       ),
     );
+  }
+}
+
+class _MyInAppBrowser extends InAppBrowser {
+  final BuildContext context;
+  final LoginBloc bloc;
+
+  _MyInAppBrowser(this.context, this.bloc);
+
+  @override
+  void onLoadStart(String url) {
+    if (url.contains("/auth/access/approve")) {
+      Future.delayed(Duration(milliseconds: 500)).then((_) {
+        return bloc.generateAccessToken();
+      }).then((isSuccess) async {
+        await close();
+        Navigator.pop(context, isSuccess);
+      });
+    }
   }
 }
