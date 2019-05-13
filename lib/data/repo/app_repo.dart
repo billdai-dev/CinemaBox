@@ -3,7 +3,7 @@ import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 
-class AppRepo implements RemoteRepo, LocalRepo {
+class AppRepo implements RemoteRepoContract, LocalRepoContract {
   static final AppRepo _repo = AppRepo._();
 
   static AppRepo get repo => _repo;
@@ -14,6 +14,9 @@ class AppRepo implements RemoteRepo, LocalRepo {
   AppRepo._() {
     _remoteRepo = RemoteRepo.remoteRepo;
     _localRepo = LocalRepo.localRepo;
+    _localRepo.loadAccessToken().then((token) {
+      _remoteRepo.accessTokenCache.complete(token);
+    });
   }
 
   @override

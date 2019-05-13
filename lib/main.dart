@@ -2,6 +2,7 @@ import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:cinema_box/ui/app_bloc.dart';
 import 'package:cinema_box/ui/login/login_bloc.dart';
 import 'package:cinema_box/ui/login/login_web_view.dart';
+import 'package:cinema_box/ui/movie_wall/movie_wall_page.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -61,7 +62,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     navKeyPageMapping = {
-      GlobalKey(debugLabel: "MovieWall"): Container(),
+      GlobalKey(debugLabel: "MovieWall"): MovieWallPage(),
       GlobalKey(debugLabel: "Search"): Container(),
       GlobalKey(debugLabel: "MyFavorite"): Container(),
       GlobalKey(debugLabel: "Profile"): Container(),
@@ -78,7 +79,28 @@ class _MainPageState extends State<MainPage> {
       child: Scaffold(
         key: scaffoldKey,
         appBar: AppBar(
+          backgroundColor: const Color.fromARGB(0, 0, 0, 0),
           title: Text("Cinema Box"),
+          actions: <Widget>[
+            IconButton(
+                icon: Icon(
+                  FontAwesomeIcons.filter,
+                  color: Colors.red,
+                ),
+                onPressed: () {}),
+          ],
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  const Color.fromARGB(180, 0, 0, 0),
+                  Colors.black,
+                ],
+              ),
+            ),
+          ),
         ),
         bottomNavigationBar: BottomNavigationBar(
           elevation: 4,

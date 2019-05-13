@@ -2,6 +2,12 @@ import 'dart:async';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+abstract class LocalRepoContract {
+  Future<bool> saveAccessToken(String token);
+
+  Future<String> loadAccessToken();
+}
+
 class LocalRepo {
   static const _keyAccessToken = "accessToken";
 

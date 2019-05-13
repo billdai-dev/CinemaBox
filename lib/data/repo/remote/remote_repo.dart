@@ -4,14 +4,18 @@ import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
 import 'package:dio/dio.dart';
 
-import '../app_repo.dart';
+abstract class RemoteRepoContract {
+  Future<RequestTokenRes> createRequestToken({String apiKey});
 
-class RemoteRepo {
+  Future<AccessTokenRes> createAccessToken(String requestToken);
+}
+
+class RemoteRepo implements RemoteRepoContract {
   static final RemoteRepo _remoteRepo = RemoteRepo._();
 
   static RemoteRepo get remoteRepo => _remoteRepo;
 
-  final Completer<String> _accessTokenCache = Completer();
+  final Completer<String> accessTokenCache = Completer();
 
   Dio _dioV3;
   Dio _dioV4;
@@ -19,12 +23,12 @@ class RemoteRepo {
   String _apiKeyV3 = "60ec67cdfd3973f8430814b7217fa490";
   String _apiAccessToken =
       "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2MGVjNjdjZGZkMzk3M2Y4NDMwODE0YjcyMTdmYTQ5MCIsInN1YiI6IjVjYjU5NDg3YzNhMzY4NmFlYjgxNWM3OCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.D8SYlMu04VCxhDi1N3aN0I8betW_4SLRMTxr4aopYQs";
+
   //String _accessToken;
   String _sessionId;
 
   RemoteRepo._() {
     _initDio();
-    _accessTokenCache.complete(AppRepo.repo.loadAccessToken());
   }
 
   Future<RequestTokenRes> createRequestToken({String apiKey}) {
@@ -42,7 +46,7 @@ class RemoteRepo {
       data: {"request_token": requestToken},
     ).then((response) {
       AccessTokenRes res = AccessTokenRes.fromJson(response.data);
-      _accessTokenCache.complete(res.accessToken);
+      accessTokenCache.complete(res.accessToken);
       return res;
     });
   }
@@ -75,7 +79,7 @@ class RemoteRepo {
 
     _dioV4 = Dio(baseOptions.merge(baseUrl: "https://api.themoviedb.org/4"))
       ..interceptors.add(InterceptorsWrapper(onRequest: (options) async {
-        String tokenCache = await _accessTokenCache.future;
+        String tokenCache = await accessTokenCache.future;
         if (tokenCache == null || tokenCache.isEmpty) {
           return options;
         }
