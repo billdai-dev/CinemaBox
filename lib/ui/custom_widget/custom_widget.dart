@@ -4,24 +4,35 @@ import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class Rating extends StatelessWidget {
-  final int total;
+  static const int _total = 5;
+  static const Color _unscoredColor = const Color.fromARGB(255, 209, 209, 214);
+
+  final int highest;
   final double rating;
   final double iconSize;
 
-  Rating(this.rating, {this.total = 5, this.iconSize = 16});
+  Rating(this.rating, {this.highest = 5, this.iconSize = 16});
 
   @override
   Widget build(BuildContext context) {
+    double ratio = rating / highest;
+    double newRating =
+        double.parse((_total * ratio).toStringAsPrecision(2)); //Ex: 3.7
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        for (var i = 1; i < total + 1; i++)
-          if (i > rating)
+        for (var i = 1; i < _total + 1; i++)
+          if (i > newRating)
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Icon(
-                FontAwesomeIcons.solidStar,
-                color: const Color.fromARGB(255, 209, 209, 214),
+                newRating.toInt() != newRating && i - 1 == newRating.toInt()
+                    ? FontAwesomeIcons.starHalfAlt
+                    : FontAwesomeIcons.solidStar,
+                color:
+                    newRating.toInt() != newRating && i - 1 == newRating.toInt()
+                        ? Colors.yellow
+                        : _unscoredColor,
                 size: iconSize,
               ),
             )
@@ -29,9 +40,7 @@ class Rating extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Icon(
-                rating.toInt() != rating
-                    ? FontAwesomeIcons.starHalfAlt
-                    : FontAwesomeIcons.solidStar,
+                FontAwesomeIcons.solidStar,
                 color: Colors.yellow,
                 size: iconSize,
               ),

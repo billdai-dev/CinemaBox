@@ -1,4 +1,8 @@
+import 'package:bloc_pattern/bloc_pattern.dart';
+import 'package:cinema_box/data/repo/model/response/now_playing_movie_list_res.dart';
+import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 import 'package:cinema_box/ui/custom_widget/custom_widget.dart';
+import 'package:cinema_box/ui/movie_wall/movie_wall_bloc.dart';
 import 'package:flutter/material.dart';
 
 class MovieWallPage extends StatefulWidget {
@@ -29,31 +33,34 @@ class _MovieWallPageState extends State<MovieWallPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            TabBar(
-              controller: _tabController,
-              indicatorColor: Colors.red,
-              labelColor: Colors.black,
-              unselectedLabelColor: Colors.grey,
-              tabs: [
-                Tab(text: "上映中"),
-                Tab(text: "即將上映"),
-              ],
-            ),
-            Expanded(
-              child: TabBarView(
+    return BlocProvider(
+      bloc: MovieWallBloc(),
+      child: Scaffold(
+        body: Container(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              TabBar(
                 controller: _tabController,
-                children: <Widget>[
-                  InTheaterMovie(),
-                  UpcomingMovie(),
+                indicatorColor: Colors.red,
+                labelColor: Colors.black,
+                unselectedLabelColor: Colors.grey,
+                tabs: [
+                  Tab(text: "上映中"),
+                  Tab(text: "即將上映"),
                 ],
               ),
-            ),
-          ],
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: <Widget>[
+                    InTheaterMovie(),
+                    UpcomingMovie(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -82,14 +89,22 @@ class _InTheaterMovieState extends State<InTheaterMovie> {
 
   @override
   Widget build(BuildContext context) {
-    return PageView(
-      physics: BouncingScrollPhysics(),
-      controller: _pageController,
-      onPageChanged: (index) {},
-      children: <Widget>[
-        MoviePoster.inTheater(),
-        MoviePoster.inTheater(),
-      ],
+    MovieWallBloc bloc = BlocProvider.of<MovieWallBloc>(context);
+    return StreamBuilder<NowPlayingMovieListRes>(
+      stream: bloc.nowPlayingMovies,
+      builder: (context, snapshot) {
+        List<Widget> movies = snapshot.hasData
+            ? snapshot.data.results
+                .map((movie) => MoviePoster.inTheater(movie))
+                .toList()
+            : [];
+
+        return PageView(
+          physics: BouncingScrollPhysics(),
+          controller: _pageController,
+          children: movies,
+        );
+      },
     );
   }
 }
@@ -120,8 +135,8 @@ class _UpcomingMovieState extends State<UpcomingMovie> {
       physics: BouncingScrollPhysics(),
       controller: _pageController,
       children: <Widget>[
-        MoviePoster.upcoming(),
-        MoviePoster.upcoming(),
+        //MoviePoster.upcoming(),
+        //MoviePoster.upcoming(),
       ],
     );
   }
@@ -129,10 +144,11 @@ class _UpcomingMovieState extends State<UpcomingMovie> {
 
 class MoviePoster extends StatefulWidget {
   final _MoviePoserType _poserType;
+  final NowPlayingMovie _movie;
 
-  MoviePoster.inTheater() : _poserType = _MoviePoserType.inTheater;
+  MoviePoster.inTheater(this._movie) : _poserType = _MoviePoserType.inTheater;
 
-  MoviePoster.upcoming() : _poserType = _MoviePoserType.upcoming;
+  MoviePoster.upcoming(this._movie) : _poserType = _MoviePoserType.upcoming;
 
   @override
   _MoviePosterState createState() => _MoviePosterState();
@@ -143,6 +159,7 @@ class _MoviePosterState extends State<MoviePoster>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    TextTheme textTheme = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       child: Column(
@@ -155,7 +172,13 @@ class _MoviePosterState extends State<MoviePoster>
                   borderRadius: BorderRadius.circular(12)),
               margin: const EdgeInsets.symmetric(vertical: 30),
               elevation: 10,
-              child: Container(),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
+                  fit: BoxFit.scaleDown,
+                ),
+              ),
             ),
           ),
           Flexible(
@@ -163,29 +186,44 @@ class _MoviePosterState extends State<MoviePoster>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text("上映時間：2018 / 04 / 25"),
+                Text(
+                  "上映時間：${widget._movie.releaseDate.replaceAll("-", " / ")}",
+                  style: textTheme.body2.copyWith(color: Colors.grey),
+                ),
                 Divider(height: 16),
-                Text("Movie chinese name"),
+                Text(
+                  "${widget._movie.title}",
+                  style: textTheme.title.copyWith(fontWeight: FontWeight.bold),
+                ),
                 SizedBox(height: 4),
-                Text("Movie english name"),
+                Text(
+                  "${widget._movie.originalTitle}",
+                  style: textTheme.body2.copyWith(color: Colors.grey),
+                ),
                 Divider(height: 12),
                 if (widget._poserType == _MoviePoserType.inTheater)
                   Row(
                     children: <Widget>[
-                      Rating(4),
+                      Rating(widget._movie.voteAverage / 2),
                       SizedBox(width: 4),
-                      Text("4.0"),
+                      Text(
+                        "${(widget._movie.voteAverage / 2).toStringAsPrecision(2)}",
+                        style: textTheme.body1.copyWith(color: Colors.grey),
+                      ),
                       SizedBox(width: 4),
-                      Text("(927)"),
+                      Text(
+                        "(${widget._movie.voteCount})",
+                        style: textTheme.body1.copyWith(color: Colors.grey),
+                      ),
                       Spacer(),
-                      CertificationTag(),
+                      //CertificationTag(),
                     ],
                   )
                 else
                   Row(
                     children: <Widget>[
                       Spacer(),
-                      CertificationTag(),
+                      //CertificationTag(),
                     ],
                   ),
               ],

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
+import 'package:cinema_box/data/repo/model/response/now_playing_movie_list_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
 import 'package:dio/dio.dart';
 
@@ -8,9 +9,15 @@ abstract class RemoteRepoContract {
   Future<RequestTokenRes> createRequestToken({String apiKey});
 
   Future<AccessTokenRes> createAccessToken(String requestToken);
+
+  Future<NowPlayingMovieListRes> getNowPlayingMovies(int page);
 }
 
 class RemoteRepo implements RemoteRepoContract {
+  static const String imageBaseUrl = "https://image.tmdb.org/t/p/original";
+  static const String _languageCode_tw = "zh-TW";
+  static const String _regionCode_tw = "TW";
+
   static final RemoteRepo _remoteRepo = RemoteRepo._();
 
   static RemoteRepo get remoteRepo => _remoteRepo;
@@ -51,6 +58,18 @@ class RemoteRepo implements RemoteRepoContract {
     });
   }
 
+  @override
+  Future<NowPlayingMovieListRes> getNowPlayingMovies(int page) {
+    return _dioV3.get(
+      "/movie/now_playing",
+      queryParameters: {
+        "language": _languageCode_tw,
+        "page": 1,
+        "region": _regionCode_tw,
+      },
+    ).then((response) => NowPlayingMovieListRes.fromJson(response.data));
+  }
+
   /*Future<CreateSessionRes> createSession(String accessToken) {
     return _dioV3.post(
       "/authentication/session/convert/4",
@@ -65,7 +84,7 @@ class RemoteRepo implements RemoteRepoContract {
   void _initDio() {
     BaseOptions baseOptions =
         BaseOptions(connectTimeout: 6000, receiveTimeout: 6000);
-    /*_dioV3 = Dio(baseOptions.merge(baseUrl: "https://api.themoviedb.org/3"))
+    _dioV3 = Dio(baseOptions.merge(baseUrl: "https://api.themoviedb.org/3"))
       ..interceptors.add(InterceptorsWrapper(onRequest: (options) async {
         if (_apiKeyV3 == null) {
           return options;
@@ -75,7 +94,7 @@ class RemoteRepo implements RemoteRepoContract {
           options.queryParameters["api_key"] = _apiKeyV3;
         }
         return options;
-      }));*/
+      }));
 
     _dioV4 = Dio(baseOptions.merge(baseUrl: "https://api.themoviedb.org/4"))
       ..interceptors.add(InterceptorsWrapper(onRequest: (options) async {

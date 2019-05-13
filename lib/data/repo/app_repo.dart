@@ -3,7 +3,9 @@ import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 
-class AppRepo implements RemoteRepoContract, LocalRepoContract {
+import 'model/response/now_playing_movie_list_res.dart';
+
+class AppRepo implements LocalRepoContract, RemoteRepoContract {
   static final AppRepo _repo = AppRepo._();
 
   static AppRepo get repo => _repo;
@@ -20,6 +22,16 @@ class AppRepo implements RemoteRepoContract, LocalRepoContract {
   }
 
   @override
+  Future<bool> saveAccessToken(String token) {
+    return _localRepo.saveAccessToken(token);
+  }
+
+  @override
+  Future<String> loadAccessToken() {
+    return _localRepo.loadAccessToken();
+  }
+
+  @override
   Future<RequestTokenRes> createRequestToken({String apiKey}) {
     return _remoteRepo.createRequestToken(apiKey: apiKey);
   }
@@ -33,12 +45,7 @@ class AppRepo implements RemoteRepoContract, LocalRepoContract {
   }
 
   @override
-  Future<bool> saveAccessToken(String token) {
-    return _localRepo.saveAccessToken(token);
-  }
-
-  @override
-  Future<String> loadAccessToken() {
-    return _localRepo.loadAccessToken();
+  Future<NowPlayingMovieListRes> getNowPlayingMovies(int page) {
+    return _remoteRepo.getNowPlayingMovies(page);
   }
 }
