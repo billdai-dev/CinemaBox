@@ -3,7 +3,7 @@ import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 
-import 'model/response/now_playing_movie_list_res.dart';
+import 'model/response/movie_poster_info_list_res.dart';
 
 class AppRepo implements LocalRepoContract, RemoteRepoContract {
   static final AppRepo _repo = AppRepo._();
@@ -45,7 +45,7 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   }
 
   @override
-  Future<NowPlayingMovieListRes> getNowPlayingMovies(int page) {
+  Future<MoviePosterInfoListRes> getNowPlayingMovies(int page) {
     return _remoteRepo.getNowPlayingMovies(page);
   }
 }

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
-import 'package:cinema_box/data/repo/model/response/now_playing_movie_list_res.dart';
+import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
 import 'package:dio/dio.dart';
 
@@ -10,7 +10,7 @@ abstract class RemoteRepoContract {
 
   Future<AccessTokenRes> createAccessToken(String requestToken);
 
-  Future<NowPlayingMovieListRes> getNowPlayingMovies(int page);
+  Future<MoviePosterInfoListRes> getNowPlayingMovies(int page);
 }
 
 class RemoteRepo implements RemoteRepoContract {
@@ -59,7 +59,7 @@ class RemoteRepo implements RemoteRepoContract {
   }
 
   @override
-  Future<NowPlayingMovieListRes> getNowPlayingMovies(int page) {
+  Future<MoviePosterInfoListRes> getNowPlayingMovies(int page) {
     return _dioV3.get(
       "/movie/now_playing",
       queryParameters: {
@@ -67,7 +67,7 @@ class RemoteRepo implements RemoteRepoContract {
         "page": 1,
         "region": _regionCode_tw,
       },
-    ).then((response) => NowPlayingMovieListRes.fromJson(response.data));
+    ).then((response) => MoviePosterInfoListRes.fromJson(response.data));
   }
 
   /*Future<CreateSessionRes> createSession(String accessToken) {

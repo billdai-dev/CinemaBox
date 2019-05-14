@@ -1,19 +1,19 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'now_playing_movie_list_res.dart';
+part of 'movie_poster_info_list_res.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-NowPlayingMovieListRes _$NowPlayingMovieListResFromJson(
+MoviePosterInfoListRes _$MoviePosterInfoListResFromJson(
     Map<String, dynamic> json) {
-  return NowPlayingMovieListRes(
+  return MoviePosterInfoListRes(
       json['page'] as int,
       (json['results'] as List)
           ?.map((e) => e == null
               ? null
-              : NowPlayingMovie.fromJson(e as Map<String, dynamic>))
+              : MoviePosterInfo.fromJson(e as Map<String, dynamic>))
           ?.toList(),
       json['dates'] == null
           ? null
@@ -22,8 +22,8 @@ NowPlayingMovieListRes _$NowPlayingMovieListResFromJson(
       json['total_results'] as int);
 }
 
-Map<String, dynamic> _$NowPlayingMovieListResToJson(
-        NowPlayingMovieListRes instance) =>
+Map<String, dynamic> _$MoviePosterInfoListResToJson(
+        MoviePosterInfoListRes instance) =>
     <String, dynamic>{
       'page': instance.page,
       'results': instance.results,
@@ -32,8 +32,8 @@ Map<String, dynamic> _$NowPlayingMovieListResToJson(
       'total_results': instance.totalResults
     };
 
-NowPlayingMovie _$NowPlayingMovieFromJson(Map<String, dynamic> json) {
-  return NowPlayingMovie(
+MoviePosterInfo _$MoviePosterInfoFromJson(Map<String, dynamic> json) {
+  return MoviePosterInfo(
       json['poster_path'] as String,
       json['adult'] as bool,
       json['overview'] as String,
@@ -50,7 +50,7 @@ NowPlayingMovie _$NowPlayingMovieFromJson(Map<String, dynamic> json) {
       (json['vote_average'] as num)?.toDouble());
 }
 
-Map<String, dynamic> _$NowPlayingMovieToJson(NowPlayingMovie instance) =>
+Map<String, dynamic> _$MoviePosterInfoToJson(MoviePosterInfo instance) =>
     <String, dynamic>{
       'poster_path': instance.posterPath,
       'adult': instance.adult,

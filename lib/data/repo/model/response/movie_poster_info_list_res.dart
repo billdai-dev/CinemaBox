@@ -1,13 +1,13 @@
 import 'package:json_annotation/json_annotation.dart';
-part 'now_playing_movie_list_res.g.dart';
+part 'movie_poster_info_list_res.g.dart';
 
 @JsonSerializable()
-class NowPlayingMovieListRes extends Object {
+class MoviePosterInfoListRes extends Object {
   @JsonKey(name: 'page')
   int page;
 
   @JsonKey(name: 'results')
-  List<NowPlayingMovie> results;
+  List<MoviePosterInfo> results;
 
   @JsonKey(name: 'dates')
   Dates dates;
@@ -18,7 +18,7 @@ class NowPlayingMovieListRes extends Object {
   @JsonKey(name: 'total_results')
   int totalResults;
 
-  NowPlayingMovieListRes(
+  MoviePosterInfoListRes(
     this.page,
     this.results,
     this.dates,
@@ -26,14 +26,14 @@ class NowPlayingMovieListRes extends Object {
     this.totalResults,
   );
 
-  factory NowPlayingMovieListRes.fromJson(Map<String, dynamic> srcJson) =>
-      _$NowPlayingMovieListResFromJson(srcJson);
+  factory MoviePosterInfoListRes.fromJson(Map<String, dynamic> srcJson) =>
+      _$MoviePosterInfoListResFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$NowPlayingMovieListResToJson(this);
+  Map<String, dynamic> toJson() => _$MoviePosterInfoListResToJson(this);
 }
 
 @JsonSerializable()
-class NowPlayingMovie extends Object {
+class MoviePosterInfo extends Object {
   @JsonKey(name: 'poster_path')
   String posterPath;
 
@@ -76,7 +76,7 @@ class NowPlayingMovie extends Object {
   @JsonKey(name: 'vote_average')
   double voteAverage;
 
-  NowPlayingMovie(
+  MoviePosterInfo(
     this.posterPath,
     this.adult,
     this.overview,
@@ -93,10 +93,10 @@ class NowPlayingMovie extends Object {
     this.voteAverage,
   );
 
-  factory NowPlayingMovie.fromJson(Map<String, dynamic> srcJson) =>
-      _$NowPlayingMovieFromJson(srcJson);
+  factory MoviePosterInfo.fromJson(Map<String, dynamic> srcJson) =>
+      _$MoviePosterInfoFromJson(srcJson);
 
-  Map<String, dynamic> toJson() => _$NowPlayingMovieToJson(this);
+  Map<String, dynamic> toJson() => _$MoviePosterInfoToJson(this);
 }
 
 @JsonSerializable()

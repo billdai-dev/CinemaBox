@@ -1,15 +1,15 @@
 import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:cinema_box/data/repo/app_repo.dart';
-import 'package:cinema_box/data/repo/model/response/now_playing_movie_list_res.dart';
+import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:rxdart/rxdart.dart';
 
 class MovieWallBloc extends BlocBase {
   final AppRepo _repo;
 
-  final BehaviorSubject<NowPlayingMovieListRes> _nowPlayingMovies =
+  final BehaviorSubject<MoviePosterInfoListRes> _nowPlayingMovies =
       BehaviorSubject();
 
-  Stream<NowPlayingMovieListRes> get nowPlayingMovies =>
+  Stream<MoviePosterInfoListRes> get nowPlayingMovies =>
       _nowPlayingMovies.stream;
 
   MovieWallBloc({AppRepo repo}) : _repo = repo ?? AppRepo.repo {

@@ -1,5 +1,6 @@
 import 'package:bloc_pattern/bloc_pattern.dart';
-import 'package:cinema_box/data/repo/model/response/now_playing_movie_list_res.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 import 'package:cinema_box/ui/custom_widget/custom_widget.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_bloc.dart';
@@ -90,7 +91,7 @@ class _InTheaterMovieState extends State<InTheaterMovie> {
   @override
   Widget build(BuildContext context) {
     MovieWallBloc bloc = BlocProvider.of<MovieWallBloc>(context);
-    return StreamBuilder<NowPlayingMovieListRes>(
+    return StreamBuilder<MoviePosterInfoListRes>(
       stream: bloc.nowPlayingMovies,
       builder: (context, snapshot) {
         List<Widget> movies = snapshot.hasData
@@ -144,7 +145,7 @@ class _UpcomingMovieState extends State<UpcomingMovie> {
 
 class MoviePoster extends StatefulWidget {
   final _MoviePoserType _poserType;
-  final NowPlayingMovie _movie;
+  final MoviePosterInfo _movie;
 
   MoviePoster.inTheater(this._movie) : _poserType = _MoviePoserType.inTheater;
 
@@ -174,8 +175,10 @@ class _MoviePosterState extends State<MoviePoster>
               elevation: 10,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
+                child: CachedNetworkImage(
+                  imageUrl:
+                      "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
+                  placeholder: (context, url) => Container(color: Colors.grey),
                   fit: BoxFit.scaleDown,
                 ),
               ),
