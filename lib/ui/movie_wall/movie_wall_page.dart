@@ -101,7 +101,6 @@ class _InTheaterMovieState extends State<InTheaterMovie> {
             : [];
 
         return PageView(
-          physics: BouncingScrollPhysics(),
           controller: _pageController,
           children: movies,
         );
@@ -132,13 +131,22 @@ class _UpcomingMovieState extends State<UpcomingMovie> {
 
   @override
   Widget build(BuildContext context) {
-    return PageView(
-      physics: BouncingScrollPhysics(),
-      controller: _pageController,
-      children: <Widget>[
-        //MoviePoster.upcoming(),
-        //MoviePoster.upcoming(),
-      ],
+    MovieWallBloc bloc = BlocProvider.of<MovieWallBloc>(context);
+    return StreamBuilder<MoviePosterInfoListRes>(
+      stream: bloc.upcomingMovies,
+      builder: (context, snapshot) {
+        List<Widget> movies = snapshot.hasData
+            ? snapshot.data.results
+                .map((movie) => MoviePoster.upcoming(movie))
+                .toList()
+            : [];
+
+        return PageView(
+          physics: BouncingScrollPhysics(),
+          controller: _pageController,
+          children: movies,
+        );
+      },
     );
   }
 }
@@ -164,27 +172,36 @@ class _MoviePosterState extends State<MoviePoster>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Flexible(
+          Expanded(
             flex: 3,
-            child: Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              margin: const EdgeInsets.symmetric(vertical: 30),
-              elevation: 10,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 30),
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                elevation: 10,
                 child: CachedNetworkImage(
                   imageUrl:
                       "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
-                  placeholder: (context, url) => Container(color: Colors.grey),
-                  fit: BoxFit.scaleDown,
+                  imageBuilder: (context, imageProvider) {
+                    return Image(
+                      image: imageProvider,
+                      fit: BoxFit.fill,
+                    );
+                  },
+                  placeholder: (context, url) {
+                    return Container(
+                      color: Colors.black12,
+                    );
+                  },
                 ),
               ),
             ),
           ),
-          Flexible(
+          Expanded(
             flex: 1,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,7 +220,8 @@ class _MoviePosterState extends State<MoviePoster>
                   "${widget._movie.originalTitle}",
                   style: textTheme.body2.copyWith(color: Colors.grey),
                 ),
-                Divider(height: 12),
+                if (widget._poserType == _MoviePoserType.inTheater)
+                  Divider(height: 12),
                 if (widget._poserType == _MoviePoserType.inTheater)
                   Row(
                     children: <Widget>[
@@ -218,13 +236,6 @@ class _MoviePosterState extends State<MoviePoster>
                         "(${widget._movie.voteCount})",
                         style: textTheme.body1.copyWith(color: Colors.grey),
                       ),
-                      Spacer(),
-                      //CertificationTag(),
-                    ],
-                  )
-                else
-                  Row(
-                    children: <Widget>[
                       Spacer(),
                       //CertificationTag(),
                     ],

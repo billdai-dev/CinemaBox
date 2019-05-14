@@ -12,14 +12,23 @@ class MovieWallBloc extends BlocBase {
   Stream<MoviePosterInfoListRes> get nowPlayingMovies =>
       _nowPlayingMovies.stream;
 
+  final BehaviorSubject<MoviePosterInfoListRes> _upcomingMovies =
+      BehaviorSubject();
+
+  Stream<MoviePosterInfoListRes> get upcomingMovies => _upcomingMovies.stream;
+
   MovieWallBloc({AppRepo repo}) : _repo = repo ?? AppRepo.repo {
     _repo.getNowPlayingMovies(1).then((res) {
       _nowPlayingMovies.add(res);
+    });
+    _repo.getUpcomingMovies(1).then((res) {
+      _upcomingMovies.add(res);
     });
   }
 
   @override
   void dispose() {
     _nowPlayingMovies?.close();
+    _upcomingMovies?.close();
   }
 }

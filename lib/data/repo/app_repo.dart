@@ -48,4 +48,9 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   Future<MoviePosterInfoListRes> getNowPlayingMovies(int page) {
     return _remoteRepo.getNowPlayingMovies(page);
   }
+
+  @override
+  Future<MoviePosterInfoListRes> getUpcomingMovies(int page) {
+    return _remoteRepo.getUpcomingMovies(page);
+  }
 }

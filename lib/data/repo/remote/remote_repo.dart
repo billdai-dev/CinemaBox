@@ -11,6 +11,8 @@ abstract class RemoteRepoContract {
   Future<AccessTokenRes> createAccessToken(String requestToken);
 
   Future<MoviePosterInfoListRes> getNowPlayingMovies(int page);
+
+  Future<MoviePosterInfoListRes> getUpcomingMovies(int page);
 }
 
 class RemoteRepo implements RemoteRepoContract {
@@ -62,6 +64,18 @@ class RemoteRepo implements RemoteRepoContract {
   Future<MoviePosterInfoListRes> getNowPlayingMovies(int page) {
     return _dioV3.get(
       "/movie/now_playing",
+      queryParameters: {
+        "language": _languageCode_tw,
+        "page": 1,
+        "region": _regionCode_tw,
+      },
+    ).then((response) => MoviePosterInfoListRes.fromJson(response.data));
+  }
+
+  @override
+  Future<MoviePosterInfoListRes> getUpcomingMovies(int page) {
+    return _dioV3.get(
+      "/movie/upcoming",
       queryParameters: {
         "language": _languageCode_tw,
         "page": 1,
