@@ -1,5 +1,6 @@
 import 'package:cinema_box/data/repo/model/local/local_repo.dart';
 import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
+import 'package:cinema_box/data/repo/model/response/movie_detail_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 
@@ -52,5 +53,12 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   @override
   Future<MoviePosterInfoListRes> getUpcomingMovies(int page) {
     return _remoteRepo.getUpcomingMovies(page);
+  }
+
+  @override
+  Future<MovieDetailRes> getMovieDetail(int movieId,
+      {List<String> appendToResponse}) {
+    return _remoteRepo.getMovieDetail(movieId,
+        appendToResponse: appendToResponse);
   }
 }

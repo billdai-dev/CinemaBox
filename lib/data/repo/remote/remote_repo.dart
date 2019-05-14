@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
+import 'package:cinema_box/data/repo/model/response/movie_detail_res.dart';
 import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
 import 'package:dio/dio.dart';
@@ -13,6 +14,9 @@ abstract class RemoteRepoContract {
   Future<MoviePosterInfoListRes> getNowPlayingMovies(int page);
 
   Future<MoviePosterInfoListRes> getUpcomingMovies(int page);
+
+  Future<MovieDetailRes> getMovieDetail(int movieId,
+      {List<String> appendToResponse});
 }
 
 class RemoteRepo implements RemoteRepoContract {
@@ -122,5 +126,23 @@ class RemoteRepo implements RemoteRepoContract {
         }
         return options;
       }));
+  }
+
+  @override
+  Future<MovieDetailRes> getMovieDetail(int movieId,
+      {List<String> appendToResponse}) {
+    Map queryParams = {
+      "language": _languageCode_tw,
+      "region": _regionCode_tw,
+    };
+    if (appendToResponse != null && appendToResponse.isNotEmpty) {
+      queryParams.putIfAbsent(
+        "append_to_response",
+        () => appendToResponse.join(","),
+      );
+    }
+    return _dioV3
+        .get("/movie/$movieId", queryParameters: queryParams)
+        .then((response) => MovieDetailRes.fromJson(response.data));
   }
 }
