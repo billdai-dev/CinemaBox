@@ -5,6 +5,7 @@ import 'package:cinema_box/ui/login/login_web_view.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_bloc.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_page.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_page.dart';
+import 'package:cinema_box/ui/youtube_video/youtube_video_page.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -29,12 +30,15 @@ class _MyAppState extends State<MyApp> {
     bloc.appNavKey = _navigatorKey;
 
     return MaterialApp(
-      key: _navigatorKey,
+      navigatorKey: _navigatorKey,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
       home: MainPage(),
+      routes: {
+        YoutubeVideoPage.routeName: (context) => YoutubeVideoPage(),
+      },
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
           builder: (context) {

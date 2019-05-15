@@ -16,7 +16,7 @@ abstract class RemoteRepoContract {
   Future<MoviePosterInfoListRes> getUpcomingMovies(int page);
 
   Future<MovieDetailRes> getMovieDetail(int movieId,
-      {List<String> appendToResponse});
+      {List<String> appendToResponse, bool isChinese = true});
 }
 
 class RemoteRepo implements RemoteRepoContract {
@@ -130,11 +130,12 @@ class RemoteRepo implements RemoteRepoContract {
 
   @override
   Future<MovieDetailRes> getMovieDetail(int movieId,
-      {List<String> appendToResponse}) {
-    Map<String, dynamic> queryParams = {
-      "language": _languageCode_tw,
-      "region": _regionCode_tw,
-    };
+      {List<String> appendToResponse, bool isChinese = true}) {
+    Map<String, dynamic> queryParams = {};
+    if (isChinese) {
+      queryParams.putIfAbsent("language", () => _languageCode_tw);
+      queryParams.putIfAbsent("region", () => _regionCode_tw);
+    }
     if (appendToResponse != null && appendToResponse.isNotEmpty) {
       queryParams.putIfAbsent(
         "append_to_response",

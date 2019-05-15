@@ -19,6 +19,31 @@ class Video extends Object {
       _$VideoFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$VideoToJson(this);
+
+  bool isYoutubeTrailerExist() {
+    if (results == null || results.isEmpty) {
+      return false;
+    }
+
+    for (var video in results) {
+      if (video.site.toLowerCase() == "youtube" &&
+          video.type.toLowerCase() == "trailer") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  List<String> getYoutubeTrailerKeys() {
+    List<String> trailerKeys = [];
+    for (var video in results) {
+      if (video.site.toLowerCase() == "youtube" &&
+          video.type.toLowerCase() == "trailer") {
+        trailerKeys.add(video.key);
+      }
+    }
+    return trailerKeys;
+  }
 }
 
 @JsonSerializable()

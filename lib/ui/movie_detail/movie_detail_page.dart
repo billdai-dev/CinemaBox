@@ -4,11 +4,15 @@ import 'package:cinema_box/data/repo/model/credit.dart';
 import 'package:cinema_box/data/repo/model/response/movie_detail_res.dart';
 import 'package:cinema_box/data/repo/model/video.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
+import 'package:cinema_box/ui/app_bloc.dart';
+import 'package:cinema_box/ui/custom_widget/custom_app_bar.dart';
 import 'package:cinema_box/ui/custom_widget/custom_widget.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_bloc.dart';
+import 'package:cinema_box/ui/youtube_video/youtube_video_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class MovieDetailPage extends StatefulWidget {
   static const String routeName = "/movieDetail";
@@ -43,30 +47,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
     MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(0, 0, 0, 0),
-        title: Text("Cinema Box"),
-        actions: <Widget>[
-          IconButton(
-              icon: Icon(
-                FontAwesomeIcons.filter,
-                color: Colors.red,
-              ),
-              onPressed: () {}),
-        ],
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                const Color.fromARGB(180, 0, 0, 0),
-                Colors.black,
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: CustomAppBar(),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return Stack(
@@ -147,7 +128,8 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
         if (snapshot.hasData)
           ..._buildOverview(textTheme, snapshot.data.overview),
         Divider(height: 32),
-        if (!true) ..._buildTrailer(textTheme, snapshot.data.videos),
+        if (snapshot.hasData && snapshot.data.videos.isYoutubeTrailerExist())
+          ..._buildTrailer(context, textTheme, snapshot.data.videos),
         if (snapshot.hasData)
           ..._buildCast(textTheme, snapshot.data.credits?.cast),
       ],
@@ -239,16 +221,61 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
     ];
   }
 
-  List<Widget> _buildTrailer(TextTheme textTheme, Video video) {
+  List<Widget> _buildTrailer(
+      BuildContext context, TextTheme textTheme, Video video) {
+    List<String> trailerKeys = video.getYoutubeTrailerKeys();
+    if (trailerKeys == null) {
+      return [];
+    }
     return [
       Text(
         "預告片",
         style: textTheme.title.copyWith(fontWeight: FontWeight.bold),
       ),
       SizedBox(height: 8),
-      Row(
-        children: <Widget>[],
+      Container(
+        height: 150,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          itemExtent: 300,
+          cacheExtent: trailerKeys.length * 0.8 * 300,
+          children: trailerKeys.map((key) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: GestureDetector(
+                  onTap: () {
+                    AppBloc bloc = BlocProviderList.of<AppBloc>(context);
+                    bloc.appNavKey.currentState.pushNamed(
+                      YoutubeVideoPage.routeName,
+                      arguments: {YoutubeVideoPage.argVideoKey: key},
+                    );
+                  },
+                  child: AbsorbPointer(
+                    child: YoutubePlayer(
+                      context: context,
+                      videoId: key,
+                      autoPlay: false,
+                      showVideoProgressIndicator: true,
+                      /*videoProgressIndicatorColor: Colors.amber,
+                      progressColors: ProgressColors(
+                        playedColor: Colors.amber,
+                        handleColor: Colors.amberAccent,
+                      ),
+                      onPlayerInitialized: (controller) {
+                        _controller = controller;
+                        _controller.addListener(listener);
+                      },*/
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
       ),
+      SizedBox(height: 36),
     ];
   }
 

@@ -2,6 +2,7 @@ import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
+import 'package:cinema_box/ui/custom_widget/custom_app_bar.dart';
 import 'package:cinema_box/ui/custom_widget/custom_widget.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_page.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_bloc.dart';
@@ -39,30 +40,7 @@ class _MovieWallPageState extends State<MovieWallPage>
     return BlocProvider(
       bloc: MovieWallBloc(),
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: const Color.fromARGB(0, 0, 0, 0),
-          title: Text("Cinema Box"),
-          actions: <Widget>[
-            IconButton(
-                icon: Icon(
-                  FontAwesomeIcons.filter,
-                  color: Colors.red,
-                ),
-                onPressed: () {}),
-          ],
-          flexibleSpace: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color.fromARGB(180, 0, 0, 0),
-                  Colors.black,
-                ],
-              ),
-            ),
-          ),
-        ),
+        appBar: CustomAppBar(),
         body: Container(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

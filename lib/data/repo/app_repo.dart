@@ -57,8 +57,8 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
 
   @override
   Future<MovieDetailRes> getMovieDetail(int movieId,
-      {List<String> appendToResponse}) {
+      {List<String> appendToResponse, bool isChinese = true}) {
     return _remoteRepo.getMovieDetail(movieId,
-        appendToResponse: appendToResponse);
+        appendToResponse: appendToResponse, isChinese: isChinese);
   }
 }

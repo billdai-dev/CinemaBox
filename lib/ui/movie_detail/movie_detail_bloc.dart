@@ -16,13 +16,25 @@ class MovieDetailBloc extends BlocBase {
 
   MovieDetailBloc({AppRepo repo}) : _repo = repo ?? AppRepo.repo {
     _fetchMovieDetail.listen((movieId) {
-      _repo.getMovieDetail(
+      Future<MovieDetailRes> chineseMovieDetail = _repo.getMovieDetail(
         movieId,
         appendToResponse: ["credits", "release_dates", "videos"],
-      ).then((res) {
-        if (!_movieDetail.isClosed) {
-          _movieDetail.add(res);
+      );
+      Future<MovieDetailRes> englishMovieDetail = _repo.getMovieDetail(
+        movieId,
+        appendToResponse: ["videos"],
+        isChinese: false,
+      );
+      Future.wait([chineseMovieDetail, englishMovieDetail]).then((responses) {
+        if (_movieDetail.isClosed) {
+          return;
         }
+        MovieDetailRes chineseMovieData = responses.first;
+        MovieDetailRes englishMovieData = responses.last;
+        //Combine two results
+        chineseMovieData?.videos?.results
+            ?.addAll(englishMovieData?.videos?.results ?? []);
+        _movieDetail.add(chineseMovieData);
       });
     });
   }
