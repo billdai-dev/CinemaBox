@@ -2,6 +2,8 @@ import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:cinema_box/ui/app_bloc.dart';
 import 'package:cinema_box/ui/login/login_bloc.dart';
 import 'package:cinema_box/ui/login/login_web_view.dart';
+import 'package:cinema_box/ui/movie_detail/movie_detail_bloc.dart';
+import 'package:cinema_box/ui/movie_detail/movie_detail_page.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_page.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -78,30 +80,6 @@ class _MainPageState extends State<MainPage> {
           .maybePop(),
       child: Scaffold(
         key: scaffoldKey,
-        appBar: AppBar(
-          backgroundColor: const Color.fromARGB(0, 0, 0, 0),
-          title: Text("Cinema Box"),
-          actions: <Widget>[
-            IconButton(
-                icon: Icon(
-                  FontAwesomeIcons.filter,
-                  color: Colors.red,
-                ),
-                onPressed: () {}),
-          ],
-          flexibleSpace: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color.fromARGB(180, 0, 0, 0),
-                  Colors.black,
-                ],
-              ),
-            ),
-          ),
-        ),
         bottomNavigationBar: BottomNavigationBar(
           elevation: 4,
           backgroundColor: const Color.fromARGB(255, 250, 250, 250),
@@ -176,11 +154,11 @@ class _MainPageState extends State<MainPage> {
           switch (routeSetting.name) {
             case "/":
               return child;
-            /*case MealDetailPage.routeName:
-              //String heroTag = (routeSetting.arguments as Map)["heroTag"];
-              return MealDetailPage();
-            case RestaurantDetailPage.routeName:
-              return RestaurantDetailPage();*/
+            case MovieDetailPage.routeName:
+              return BlocProvider<MovieDetailBloc>(
+                bloc: MovieDetailBloc(),
+                child: MovieDetailPage(),
+              );
             default:
               return Container(
                 alignment: Alignment.center,

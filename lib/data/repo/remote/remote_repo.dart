@@ -131,7 +131,7 @@ class RemoteRepo implements RemoteRepoContract {
   @override
   Future<MovieDetailRes> getMovieDetail(int movieId,
       {List<String> appendToResponse}) {
-    Map queryParams = {
+    Map<String, dynamic> queryParams = {
       "language": _languageCode_tw,
       "region": _regionCode_tw,
     };

@@ -45,14 +45,15 @@ MovieDetailRes _$MovieDetailResFromJson(Map<String, dynamic> json) {
       json['tagline'] as String,
       json['title'] as String,
       json['video'] as bool,
-      json['vote_average'] as int,
+      (json['vote_average'] as num)?.toDouble(),
       json['vote_count'] as int,
       json['credits'] == null
           ? null
           : Credit.fromJson(json['credits'] as Map<String, dynamic>),
       json['release_dates'] == null
           ? null
-          : ReleaseDate.fromJson(json['release_dates'] as Map<String, dynamic>),
+          : ReleaseDateInfo.fromJson(
+              json['release_dates'] as Map<String, dynamic>),
       json['videos'] == null
           ? null
           : Video.fromJson(json['videos'] as Map<String, dynamic>));
@@ -85,7 +86,7 @@ Map<String, dynamic> _$MovieDetailResToJson(MovieDetailRes instance) =>
       'vote_average': instance.voteAverage,
       'vote_count': instance.voteCount,
       'credits': instance.credits,
-      'release_dates': instance.releaseDates,
+      'release_dates': instance.releaseDataInfo,
       'videos': instance.videos
     };
 

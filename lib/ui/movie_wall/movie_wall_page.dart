@@ -3,8 +3,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 import 'package:cinema_box/ui/custom_widget/custom_widget.dart';
+import 'package:cinema_box/ui/movie_detail/movie_detail_page.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class MovieWallPage extends StatefulWidget {
   static const String routeName = "/movieWall";
@@ -37,6 +39,30 @@ class _MovieWallPageState extends State<MovieWallPage>
     return BlocProvider(
       bloc: MovieWallBloc(),
       child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: const Color.fromARGB(0, 0, 0, 0),
+          title: Text("Cinema Box"),
+          actions: <Widget>[
+            IconButton(
+                icon: Icon(
+                  FontAwesomeIcons.filter,
+                  color: Colors.red,
+                ),
+                onPressed: () {}),
+          ],
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  const Color.fromARGB(180, 0, 0, 0),
+                  Colors.black,
+                ],
+              ),
+            ),
+          ),
+        ),
         body: Container(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -178,25 +204,40 @@ class _MoviePosterState extends State<MoviePoster>
             flex: 3,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 30),
-              child: Card(
-                clipBehavior: Clip.antiAlias,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                elevation: 10,
-                child: CachedNetworkImage(
-                  imageUrl:
-                      "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
-                  imageBuilder: (context, imageProvider) {
-                    return Image(
-                      image: imageProvider,
-                      fit: BoxFit.fill,
-                    );
-                  },
-                  placeholder: (context, url) {
-                    return Container(
-                      color: Colors.black12,
-                    );
-                  },
+              child: InkWell(
+                onTap: () {
+                  int movieId = widget._movie.id;
+                  Navigator.of(context).pushNamed(
+                    MovieDetailPage.routeName,
+                    arguments: {
+                      MovieDetailPage.movieIdParam: movieId,
+                      MovieDetailPage.posterHeroTagParam: "$movieId",
+                      MovieDetailPage.posterUrlParam: widget._movie.posterPath,
+                    },
+                  );
+                },
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 10,
+                  child: Hero(
+                    tag: "${widget._movie.id}",
+                    child: CachedNetworkImage(
+                      imageUrl:
+                          "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
+                      imageBuilder: (context, imageProvider) {
+                        return Image(
+                          image: imageProvider,
+                          fit: BoxFit.fill,
+                        );
+                      },
+                      placeholder: (context, url) {
+                        return Container(color: Colors.black12);
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),

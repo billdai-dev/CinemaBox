@@ -1,3 +1,4 @@
+import 'package:cinema_box/data/repo/model/release_date_info.dart';
 import 'package:cinema_box/util/certification_converter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -51,11 +52,17 @@ class Rating extends StatelessWidget {
 }
 
 class CertificationTag extends StatelessWidget {
-  final CertificationConverter _converter = CertificationConverter([]);
+  final ReleaseDateInfo _info;
+  final CertificationConverter _converter;
+
+  CertificationTag(this._info) : _converter = CertificationConverter(_info);
 
   @override
   Widget build(BuildContext context) {
     String certification = _converter.getTwCertification();
+    if (certification.isEmpty) {
+      return SizedBox.shrink();
+    }
     Color color = _converter.getCertificationColor(certification);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 10),
@@ -65,7 +72,8 @@ class CertificationTag extends StatelessWidget {
       ),
       child: Text(
         certification,
-        style: Theme.of(context).textTheme.button.copyWith(color: Colors.white),
+        style:
+            Theme.of(context).textTheme.caption.copyWith(color: Colors.white),
       ),
     );
   }

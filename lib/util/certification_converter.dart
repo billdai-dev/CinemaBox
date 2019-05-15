@@ -1,3 +1,4 @@
+import 'package:cinema_box/data/repo/model/release_date_info.dart';
 import 'package:flutter/material.dart';
 
 class CertificationConverter {
@@ -17,44 +18,46 @@ class CertificationConverter {
   static const String certificationPg15 = "輔15級";
   static const String certificationR = "限制級";
 
-  List<String> _certifications;
+  ReleaseDateInfo _certification;
 
-  CertificationConverter(this._certifications);
+  CertificationConverter(this._certification);
 
   String getTwCertification() {
     bool allNonNull = true;
 
-    for (var cert in _certifications) {
-      String countryCode = "countryCode";
-      String certification = "certification";
-      if (countryCode == "AU") {
-        allNonNull &= certification != null && certification.isNotEmpty;
-        if (_pg15_au == certification) {
-          return certificationPg15;
+    for (var cert in _certification.results) {
+      String countryCode = cert.iso31661;
+      for (var country in cert.releaseDates) {
+        String certification = country.certification;
+        if (countryCode == "AU") {
+          allNonNull &= certification != null && certification.isNotEmpty;
+          if (_pg15_au == certification) {
+            return certificationPg15;
+          }
         }
-      }
-      if (countryCode == "NL") {
-        allNonNull &= certification != null && certification.isNotEmpty;
-        if (_g_nl == certification) {
-          return certificationG;
+        if (countryCode == "NL") {
+          allNonNull &= certification != null && certification.isNotEmpty;
+          if (_g_nl == certification) {
+            return certificationG;
+          }
         }
-      }
-      if (countryCode == "HU") {
-        allNonNull &= certification != null && certification.isNotEmpty;
-        if (_pg_hu == certification) {
-          return certificationG;
-        } else if (_r_hu == certification) {
-          return certificationR;
+        if (countryCode == "HU") {
+          allNonNull &= certification != null && certification.isNotEmpty;
+          if (_pg_hu == certification) {
+            return certificationG;
+          } else if (_r_hu == certification) {
+            return certificationR;
+          }
         }
-      }
-      if (countryCode == "RU") {
-        allNonNull &= certification != null && certification.isNotEmpty;
-        if (_g_ru == certification) {
-          return certificationG;
-        } else if (_pg_ru == certification) {
-          return certificationPg;
-        } else if (_r_ru == certification) {
-          return certificationR;
+        if (countryCode == "RU") {
+          allNonNull &= certification != null && certification.isNotEmpty;
+          if (_g_ru == certification) {
+            return certificationG;
+          } else if (_pg_ru == certification) {
+            return certificationPg;
+          } else if (_r_ru == certification) {
+            return certificationR;
+          }
         }
       }
     }

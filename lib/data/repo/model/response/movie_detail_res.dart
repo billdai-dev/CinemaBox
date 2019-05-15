@@ -74,7 +74,7 @@ class MovieDetailRes extends Object {
   bool video;
 
   @JsonKey(name: 'vote_average')
-  int voteAverage;
+  double voteAverage;
 
   @JsonKey(name: 'vote_count')
   int voteCount;
@@ -83,7 +83,7 @@ class MovieDetailRes extends Object {
   Credit credits;
 
   @JsonKey(name: 'release_dates')
-  ReleaseDate releaseDates;
+  ReleaseDateInfo releaseDataInfo;
 
   @JsonKey(name: 'videos')
   Video videos;
@@ -114,7 +114,7 @@ class MovieDetailRes extends Object {
     this.voteAverage,
     this.voteCount,
     this.credits,
-    this.releaseDates,
+    this.releaseDataInfo,
     this.videos,
   );
 
