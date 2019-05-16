@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
@@ -7,7 +9,6 @@ import 'package:cinema_box/ui/custom_widget/custom_widget.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_page.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class MovieWallPage extends StatefulWidget {
   static const String routeName = "/movieWall";
@@ -50,6 +51,7 @@ class _MovieWallPageState extends State<MovieWallPage>
                 indicatorColor: Colors.red,
                 labelColor: Colors.black,
                 unselectedLabelColor: Colors.grey,
+                indicatorWeight: 1,
                 tabs: [
                   Tab(text: "上映中"),
                   Tab(text: "即將上映"),
@@ -77,8 +79,10 @@ class InTheaterMovie extends StatefulWidget {
   _InTheaterMovieState createState() => _InTheaterMovieState();
 }
 
-class _InTheaterMovieState extends State<InTheaterMovie> {
+class _InTheaterMovieState extends State<InTheaterMovie>
+    with AutomaticKeepAliveClientMixin<InTheaterMovie> {
   PageController _pageController;
+  Completer<bool> isRefreshing;
 
   @override
   void initState() {
@@ -94,23 +98,63 @@ class _InTheaterMovieState extends State<InTheaterMovie> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     MovieWallBloc bloc = BlocProvider.of<MovieWallBloc>(context);
-    return StreamBuilder<MoviePosterInfoListRes>(
-      stream: bloc.nowPlayingMovies,
-      builder: (context, snapshot) {
-        List<Widget> movies = snapshot.hasData
-            ? snapshot.data.results
-                .map((movie) => MoviePoster.inTheater(movie))
-                .toList()
-            : [];
-
-        return PageView(
-          controller: _pageController,
-          children: movies,
-        );
+    return RefreshIndicator(
+      onRefresh: () {
+        bloc.fetchNowPlayingMovies(refresh: true);
+        isRefreshing = Completer();
+        return isRefreshing.future.then((_) {
+          _pageController.animateTo(0,
+              duration: Duration(milliseconds: 200), curve: Curves.easeIn);
+        });
       },
+      child: ListView(
+        shrinkWrap: true,
+        children: <Widget>[
+          Container(
+            height: 618,
+            child: StreamBuilder<MoviePosterInfoListRes>(
+              stream: bloc.nowPlayingMovies,
+              builder: (context, snapshot) {
+                if (isRefreshing != null && !isRefreshing.isCompleted) {
+                  isRefreshing.complete(true);
+                }
+                List<Widget> movies = snapshot.hasData
+                    ? snapshot.data.results
+                        .map((movie) => MoviePoster.inTheater(movie))
+                        .toList()
+                    : [];
+                return PageView(
+                  controller: _pageController,
+                  onPageChanged: (currentPage) {
+                    int dataSize = bloc.nowPlayingMoviesLength;
+                    if (dataSize == 0) {
+                      return;
+                    }
+                    if (currentPage >= dataSize - 3) {
+                      bloc.fetchNowPlayingMovies();
+                    }
+                  },
+                  children: <Widget>[
+                    ...movies,
+                    if (snapshot.hasData &&
+                        snapshot.data.page != snapshot.data.totalPages)
+                      Container(
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class UpcomingMovie extends StatefulWidget {
@@ -118,8 +162,10 @@ class UpcomingMovie extends StatefulWidget {
   _UpcomingMovieState createState() => _UpcomingMovieState();
 }
 
-class _UpcomingMovieState extends State<UpcomingMovie> {
+class _UpcomingMovieState extends State<UpcomingMovie>
+    with AutomaticKeepAliveClientMixin<UpcomingMovie> {
   PageController _pageController;
+  Completer<bool> isRefreshing;
 
   @override
   void initState() {
@@ -135,24 +181,65 @@ class _UpcomingMovieState extends State<UpcomingMovie> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     MovieWallBloc bloc = BlocProvider.of<MovieWallBloc>(context);
-    return StreamBuilder<MoviePosterInfoListRes>(
-      stream: bloc.upcomingMovies,
-      builder: (context, snapshot) {
-        List<Widget> movies = snapshot.hasData
-            ? snapshot.data.results
-                .map((movie) => MoviePoster.upcoming(movie))
-                .toList()
-            : [];
-
-        return PageView(
-          physics: BouncingScrollPhysics(),
-          controller: _pageController,
-          children: movies,
-        );
+    return RefreshIndicator(
+      onRefresh: () {
+        bloc.fetchUpcomingMovies(refresh: true);
+        isRefreshing = Completer();
+        return isRefreshing.future.then((_) {
+          _pageController.animateTo(0,
+              duration: Duration(milliseconds: 200), curve: Curves.easeIn);
+        });
       },
+      child: ListView(
+        shrinkWrap: true,
+        children: <Widget>[
+          Container(
+            height: 618,
+            child: StreamBuilder<MoviePosterInfoListRes>(
+              stream: bloc.upcomingMovies,
+              builder: (context, snapshot) {
+                if (isRefreshing != null && !isRefreshing.isCompleted) {
+                  isRefreshing.complete(true);
+                }
+                List<Widget> movies = snapshot.hasData
+                    ? snapshot.data.results
+                        .map((movie) => MoviePoster.upcoming(movie))
+                        .toList()
+                    : [];
+
+                return PageView(
+                  physics: BouncingScrollPhysics(),
+                  controller: _pageController,
+                  onPageChanged: (currentPage) {
+                    int dataSize = bloc.upcomingMoviesLength;
+                    if (dataSize == 0) {
+                      return;
+                    }
+                    if (currentPage >= dataSize - 3) {
+                      bloc.fetchUpcomingMovies();
+                    }
+                  },
+                  children: <Widget>[
+                    ...movies,
+                    if (snapshot.hasData &&
+                        snapshot.data.page != snapshot.data.totalPages)
+                      Container(
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class MoviePoster extends StatefulWidget {
@@ -179,9 +266,9 @@ class _MoviePosterState extends State<MoviePoster>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Expanded(
-            flex: 3,
+            flex: 7,
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 30),
+              padding: const EdgeInsets.only(top: 25, bottom: 30),
               child: InkWell(
                 onTap: () {
                   int movieId = widget._movie.id;
@@ -195,6 +282,7 @@ class _MoviePosterState extends State<MoviePoster>
                   );
                 },
                 child: Card(
+                  color: Colors.black12,
                   clipBehavior: Clip.antiAlias,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -221,7 +309,7 @@ class _MoviePosterState extends State<MoviePoster>
             ),
           ),
           Expanded(
-            flex: 1,
+            flex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -229,18 +317,22 @@ class _MoviePosterState extends State<MoviePoster>
                   "上映時間：${widget._movie.releaseDate.replaceAll("-", " / ")}",
                   style: textTheme.body2.copyWith(color: Colors.grey),
                 ),
-                Divider(height: 16),
+                Divider(height: 10),
                 Text(
                   "${widget._movie.title}",
                   style: textTheme.title.copyWith(fontWeight: FontWeight.bold),
+                  maxLines: 2,
+                  overflow: TextOverflow.fade,
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 2),
                 Text(
                   "${widget._movie.originalTitle}",
                   style: textTheme.body2.copyWith(color: Colors.grey),
+                  maxLines: 2,
+                  overflow: TextOverflow.fade,
                 ),
                 if (widget._poserType == _MoviePoserType.inTheater)
-                  Divider(height: 12),
+                  Divider(height: 10),
                 if (widget._poserType == _MoviePoserType.inTheater)
                   Row(
                     children: <Widget>[
@@ -250,7 +342,7 @@ class _MoviePosterState extends State<MoviePoster>
                         "${(widget._movie.voteAverage / 2).toStringAsPrecision(2)}",
                         style: textTheme.body1.copyWith(color: Colors.grey),
                       ),
-                      SizedBox(width: 4),
+                      SizedBox(width: 2),
                       Text(
                         "(${widget._movie.voteCount})",
                         style: textTheme.body1.copyWith(color: Colors.grey),
@@ -268,7 +360,7 @@ class _MoviePosterState extends State<MoviePoster>
   }
 
   @override
-  bool get wantKeepAlive => true;
+  bool get wantKeepAlive => false;
 }
 
 enum _MoviePoserType { inTheater, upcoming }

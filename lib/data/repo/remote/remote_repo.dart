@@ -70,7 +70,7 @@ class RemoteRepo implements RemoteRepoContract {
       "/movie/now_playing",
       queryParameters: {
         "language": _languageCode_tw,
-        "page": 1,
+        "page": page,
         "region": _regionCode_tw,
       },
     ).then((response) => MoviePosterInfoListRes.fromJson(response.data));
@@ -82,7 +82,7 @@ class RemoteRepo implements RemoteRepoContract {
       "/movie/upcoming",
       queryParameters: {
         "language": _languageCode_tw,
-        "page": 1,
+        "page": page,
         "region": _regionCode_tw,
       },
     ).then((response) => MoviePosterInfoListRes.fromJson(response.data));

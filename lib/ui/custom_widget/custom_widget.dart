@@ -12,7 +12,7 @@ class Rating extends StatelessWidget {
   final double rating;
   final double iconSize;
 
-  Rating(this.rating, {this.highest = 5, this.iconSize = 16});
+  Rating(this.rating, {this.highest = 5, this.iconSize = 14});
 
   @override
   Widget build(BuildContext context) {
