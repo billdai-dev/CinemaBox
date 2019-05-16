@@ -58,7 +58,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                     minHeight: constraints.maxHeight,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
                     child: StreamBuilder<MovieDetailRes>(
                       stream: bloc.movieDetail,
                       builder: (context, snapshot) {
@@ -66,13 +66,13 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: <Widget>[
-                            SizedBox(height: 20),
                             Container(
-                              height: 200,
+                              margin: const EdgeInsets.symmetric(vertical: 20),
+                              height: 210,
                               child: Row(
                                 children: <Widget>[
                                   _buildPoster(),
-                                  SizedBox(width: 8),
+                                  SizedBox(width: 10),
                                   if (snapshot.hasData)
                                     Expanded(
                                       child: _buildTitles(snapshot.data),
@@ -80,7 +80,6 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                                 ],
                               ),
                             ),
-                            SizedBox(height: 20),
                             _buildSegmentedControl(),
                             SizedBox(height: 20),
                             ValueListenableBuilder(
@@ -127,7 +126,6 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
       children: <Widget>[
         if (snapshot.hasData)
           ..._buildOverview(textTheme, snapshot.data.overview),
-        Divider(height: 32),
         if (snapshot.hasData && snapshot.data.videos.isYoutubeTrailerExist())
           ..._buildTrailer(context, textTheme, snapshot.data.videos),
         if (snapshot.hasData)
@@ -138,6 +136,8 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
 
   Widget _buildPoster() {
     return Container(
+      width: 115,
+      height: 170,
       child: Hero(
         tag: posterHeroTag,
         child: ClipRRect(
@@ -164,18 +164,19 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        SizedBox(height: 8),
-        Align(
-          alignment: Alignment(0.8, 0),
+        SizedBox(height: 30),
+        Container(
+          alignment: Alignment.centerRight,
+          margin: const EdgeInsets.only(right: 15),
           child: Icon(FontAwesomeIcons.heart),
         ),
-        SizedBox(height: 28),
+        SizedBox(height: 20),
         Text("上映時間：${data.releaseDate.replaceAll("-", " / ")}"),
-        Divider(height: 16),
+        Divider(height: 10),
         Text("${data.title}"),
         SizedBox(height: 2),
         Text("${data.originalTitle}"),
-        Divider(height: 16),
+        Divider(height: 10),
         Row(
           children: <Widget>[
             Rating(double.parse(rating), iconSize: 12),
@@ -218,6 +219,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
       ),
       SizedBox(height: 8),
       Text(overview),
+      Divider(height: 40),
     ];
   }
 
@@ -232,16 +234,16 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
         "預告片",
         style: textTheme.title.copyWith(fontWeight: FontWeight.bold),
       ),
-      SizedBox(height: 8),
+      SizedBox(height: 10),
       Container(
-        height: 150,
+        height: 90,
         child: ListView(
           scrollDirection: Axis.horizontal,
-          itemExtent: 300,
-          cacheExtent: trailerKeys.length * 0.8 * 300,
+          itemExtent: 170,
+          cacheExtent: trailerKeys.length * 0.8 * 170,
           children: trailerKeys.map((key) {
             return Padding(
-              padding: const EdgeInsets.only(right: 12.0),
+              padding: const EdgeInsets.only(right: 10.0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: GestureDetector(
@@ -258,15 +260,6 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                       videoId: key,
                       autoPlay: false,
                       showVideoProgressIndicator: true,
-                      /*videoProgressIndicatorColor: Colors.amber,
-                      progressColors: ProgressColors(
-                        playedColor: Colors.amber,
-                        handleColor: Colors.amberAccent,
-                      ),
-                      onPlayerInitialized: (controller) {
-                        _controller = controller;
-                        _controller.addListener(listener);
-                      },*/
                     ),
                   ),
                 ),
@@ -275,7 +268,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
           }).toList(),
         ),
       ),
-      SizedBox(height: 36),
+      Divider(height: 40),
     ];
   }
 
@@ -287,24 +280,24 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
       ),
       SizedBox(height: 16),
       Container(
-        height: 120,
+        height: 100,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: casts.length,
-          itemExtent: 100,
+          itemExtent: 80,
           itemBuilder: (context, index) {
             return Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: 15),
               child: Column(
                 children: <Widget>[
                   CircleAvatar(
-                    radius: 36,
+                    radius: 32,
                     backgroundColor: Colors.black12,
                     backgroundImage: CachedNetworkImageProvider(
                       "${RemoteRepo.imageBaseUrl}${casts[index].profilePath}",
                     ),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: 5),
                   Text(
                     casts[index].name,
                     textAlign: TextAlign.center,
@@ -316,6 +309,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
           },
         ),
       ),
+      Divider(height: 40),
     ];
   }
 
