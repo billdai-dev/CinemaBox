@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -80,14 +81,20 @@ class InTheaterMovie extends StatefulWidget {
 }
 
 class _InTheaterMovieState extends State<InTheaterMovie>
-    with AutomaticKeepAliveClientMixin<InTheaterMovie> {
+    with
+        AutomaticKeepAliveClientMixin<InTheaterMovie>,
+        SingleTickerProviderStateMixin {
   PageController _pageController;
   Completer<bool> isRefreshing;
+  ValueNotifier<double> currentPageOffset = ValueNotifier(0);
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.7);
+    _pageController = PageController(viewportFraction: 0.65);
+    _pageController.addListener(() {
+      currentPageOffset.value = _pageController.page;
+    });
   }
 
   @override
@@ -120,12 +127,17 @@ class _InTheaterMovieState extends State<InTheaterMovie>
                 if (isRefreshing != null && !isRefreshing.isCompleted) {
                   isRefreshing.complete(true);
                 }
-                List<Widget> movies = snapshot.hasData
-                    ? snapshot.data.results
-                        .map((movie) => MoviePoster.inTheater(movie))
-                        .toList()
-                    : [];
-                return PageView(
+                MoviePosterInfoListRes data = snapshot.data;
+                int itemCount;
+                if (!snapshot.hasData) {
+                  itemCount = 1;
+                } else {
+                  itemCount = data.page != data.totalPages
+                      ? data.results.length + 1
+                      : data.results.length;
+                }
+
+                return PageView.builder(
                   controller: _pageController,
                   onPageChanged: (currentPage) {
                     int dataSize = bloc.nowPlayingMoviesLength;
@@ -136,14 +148,34 @@ class _InTheaterMovieState extends State<InTheaterMovie>
                       bloc.fetchNowPlayingMovies();
                     }
                   },
-                  children: <Widget>[
-                    ...movies,
-                    if (snapshot.hasData &&
-                        snapshot.data.page != snapshot.data.totalPages)
-                      Container(
+                  itemBuilder: (context, pageIndex) {
+                    if (!snapshot.hasData || pageIndex >= data.results.length) {
+                      return Container(
                         child: Center(child: CircularProgressIndicator()),
-                      ),
-                  ],
+                      );
+                    }
+                    return ValueListenableBuilder<double>(
+                      valueListenable: currentPageOffset,
+                      builder: (context, currentPageOffset, child) {
+                        double scaleFactor;
+                        if (pageIndex == currentPageOffset.floor()) {
+                          scaleFactor = max(
+                              0.9, 1 - (0.1 * (currentPageOffset - pageIndex)));
+                        } else if (pageIndex == currentPageOffset.ceil()) {
+                          scaleFactor = max(
+                              0.9, 1 - (0.1 * (pageIndex - currentPageOffset)));
+                        } else {
+                          scaleFactor = 0.9;
+                        }
+                        return Transform.scale(
+                          scale: scaleFactor,
+                          child: child,
+                        );
+                      },
+                      child: MoviePoster.inTheater(data.results[pageIndex]),
+                    );
+                  },
+                  itemCount: itemCount,
                 );
               },
             ),
@@ -166,11 +198,15 @@ class _UpcomingMovieState extends State<UpcomingMovie>
     with AutomaticKeepAliveClientMixin<UpcomingMovie> {
   PageController _pageController;
   Completer<bool> isRefreshing;
+  ValueNotifier<double> currentPageOffset = ValueNotifier(0);
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.7);
+    _pageController = PageController(viewportFraction: 0.65);
+    _pageController.addListener(() {
+      currentPageOffset.value = _pageController.page;
+    });
   }
 
   @override
@@ -203,13 +239,17 @@ class _UpcomingMovieState extends State<UpcomingMovie>
                 if (isRefreshing != null && !isRefreshing.isCompleted) {
                   isRefreshing.complete(true);
                 }
-                List<Widget> movies = snapshot.hasData
-                    ? snapshot.data.results
-                        .map((movie) => MoviePoster.upcoming(movie))
-                        .toList()
-                    : [];
+                MoviePosterInfoListRes data = snapshot.data;
+                int itemCount;
+                if (!snapshot.hasData) {
+                  itemCount = 1;
+                } else {
+                  itemCount = data.page != data.totalPages
+                      ? data.results.length + 1
+                      : data.results.length;
+                }
 
-                return PageView(
+                return PageView.builder(
                   physics: BouncingScrollPhysics(),
                   controller: _pageController,
                   onPageChanged: (currentPage) {
@@ -221,14 +261,34 @@ class _UpcomingMovieState extends State<UpcomingMovie>
                       bloc.fetchUpcomingMovies();
                     }
                   },
-                  children: <Widget>[
-                    ...movies,
-                    if (snapshot.hasData &&
-                        snapshot.data.page != snapshot.data.totalPages)
-                      Container(
+                  itemBuilder: (context, pageIndex) {
+                    if (!snapshot.hasData || pageIndex >= data.results.length) {
+                      return Container(
                         child: Center(child: CircularProgressIndicator()),
-                      ),
-                  ],
+                      );
+                    }
+                    return ValueListenableBuilder<double>(
+                      valueListenable: currentPageOffset,
+                      builder: (context, currentPageOffset, child) {
+                        double scaleFactor;
+                        if (pageIndex == currentPageOffset.floor()) {
+                          scaleFactor = max(
+                              0.9, 1 - (0.1 * (currentPageOffset - pageIndex)));
+                        } else if (pageIndex == currentPageOffset.ceil()) {
+                          scaleFactor = max(
+                              0.9, 1 - (0.1 * (pageIndex - currentPageOffset)));
+                        } else {
+                          scaleFactor = 0.9;
+                        }
+                        return Transform.scale(
+                          scale: scaleFactor,
+                          child: child,
+                        );
+                      },
+                      child: MoviePoster.upcoming(data.results[pageIndex]),
+                    );
+                  },
+                  itemCount: itemCount,
                 );
               },
             ),
@@ -261,26 +321,26 @@ class _MoviePosterState extends State<MoviePoster>
     super.build(context);
     TextTheme textTheme = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Expanded(
-            flex: 7,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 25, bottom: 30),
-              child: InkWell(
-                onTap: () {
-                  int movieId = widget._movie.id;
-                  Navigator.of(context).pushNamed(
-                    MovieDetailPage.routeName,
-                    arguments: {
-                      MovieDetailPage.movieIdParam: movieId,
-                      MovieDetailPage.posterHeroTagParam: "$movieId",
-                      MovieDetailPage.posterUrlParam: widget._movie.posterPath,
-                    },
-                  );
-                },
+          Padding(
+            padding:
+                const EdgeInsets.only(left: 8, top: 25, right: 8, bottom: 30),
+            child: InkWell(
+              onTap: () {
+                int movieId = widget._movie.id;
+                Navigator.of(context).pushNamed(
+                  MovieDetailPage.routeName,
+                  arguments: {
+                    MovieDetailPage.movieIdParam: movieId,
+                    MovieDetailPage.posterHeroTagParam: "$movieId",
+                    MovieDetailPage.posterUrlParam: widget._movie.posterPath,
+                  },
+                );
+              },
+              child: Container(
+                width: 220,
+                height: 325,
                 child: Card(
                   color: Colors.black12,
                   clipBehavior: Clip.antiAlias,
@@ -296,7 +356,7 @@ class _MoviePosterState extends State<MoviePoster>
                       imageBuilder: (context, imageProvider) {
                         return Image(
                           image: imageProvider,
-                          fit: BoxFit.fill,
+                          fit: BoxFit.cover,
                         );
                       },
                       placeholder: (context, url) {
@@ -308,51 +368,48 @@ class _MoviePosterState extends State<MoviePoster>
               ),
             ),
           ),
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  "上映時間：${widget._movie.releaseDate.replaceAll("-", " / ")}",
-                  style: textTheme.body2.copyWith(color: Colors.grey),
-                ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                "上映時間：${widget._movie.releaseDate.replaceAll("-", " / ")}",
+                style: textTheme.body2.copyWith(color: Colors.grey),
+              ),
+              Divider(height: 10),
+              Text(
+                "${widget._movie.title}",
+                style: textTheme.title.copyWith(fontWeight: FontWeight.bold),
+                maxLines: 2,
+                overflow: TextOverflow.fade,
+              ),
+              SizedBox(height: 2),
+              Text(
+                "${widget._movie.originalTitle}",
+                style: textTheme.body2.copyWith(color: Colors.grey),
+                maxLines: 2,
+                overflow: TextOverflow.fade,
+              ),
+              if (widget._poserType == _MoviePoserType.inTheater)
                 Divider(height: 10),
-                Text(
-                  "${widget._movie.title}",
-                  style: textTheme.title.copyWith(fontWeight: FontWeight.bold),
-                  maxLines: 2,
-                  overflow: TextOverflow.fade,
+              if (widget._poserType == _MoviePoserType.inTheater)
+                Row(
+                  children: <Widget>[
+                    Rating(widget._movie.voteAverage / 2),
+                    SizedBox(width: 4),
+                    Text(
+                      "${(widget._movie.voteAverage / 2).toStringAsPrecision(2)}",
+                      style: textTheme.body1.copyWith(color: Colors.grey),
+                    ),
+                    SizedBox(width: 2),
+                    Text(
+                      "(${widget._movie.voteCount})",
+                      style: textTheme.body1.copyWith(color: Colors.grey),
+                    ),
+                    Spacer(),
+                    //CertificationTag(),
+                  ],
                 ),
-                SizedBox(height: 2),
-                Text(
-                  "${widget._movie.originalTitle}",
-                  style: textTheme.body2.copyWith(color: Colors.grey),
-                  maxLines: 2,
-                  overflow: TextOverflow.fade,
-                ),
-                if (widget._poserType == _MoviePoserType.inTheater)
-                  Divider(height: 10),
-                if (widget._poserType == _MoviePoserType.inTheater)
-                  Row(
-                    children: <Widget>[
-                      Rating(widget._movie.voteAverage / 2),
-                      SizedBox(width: 4),
-                      Text(
-                        "${(widget._movie.voteAverage / 2).toStringAsPrecision(2)}",
-                        style: textTheme.body1.copyWith(color: Colors.grey),
-                      ),
-                      SizedBox(width: 2),
-                      Text(
-                        "(${widget._movie.voteCount})",
-                        style: textTheme.body1.copyWith(color: Colors.grey),
-                      ),
-                      Spacer(),
-                      //CertificationTag(),
-                    ],
-                  ),
-              ],
-            ),
+            ],
           ),
         ],
       ),
