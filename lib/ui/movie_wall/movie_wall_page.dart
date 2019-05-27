@@ -91,7 +91,7 @@ class _InTheaterMovieState extends State<InTheaterMovie>
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.65);
+    _pageController = PageController(viewportFraction: 0.586);
     _pageController.addListener(() {
       currentPageOffset.value = _pageController.page;
     });
@@ -116,71 +116,77 @@ class _InTheaterMovieState extends State<InTheaterMovie>
               duration: Duration(milliseconds: 200), curve: Curves.easeIn);
         });
       },
-      child: ListView(
-        shrinkWrap: true,
-        children: <Widget>[
-          Container(
-            height: 618,
-            child: StreamBuilder<MoviePosterInfoListRes>(
-              stream: bloc.nowPlayingMovies,
-              builder: (context, snapshot) {
-                if (isRefreshing != null && !isRefreshing.isCompleted) {
-                  isRefreshing.complete(true);
-                }
-                MoviePosterInfoListRes data = snapshot.data;
-                int itemCount;
-                if (!snapshot.hasData) {
-                  itemCount = 1;
-                } else {
-                  itemCount = data.page != data.totalPages
-                      ? data.results.length + 1
-                      : data.results.length;
-                }
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          double height = constraints.maxHeight;
+          return ListView(
+            shrinkWrap: true,
+            children: <Widget>[
+              Container(
+                height: height,
+                child: StreamBuilder<MoviePosterInfoListRes>(
+                  stream: bloc.nowPlayingMovies,
+                  builder: (context, snapshot) {
+                    if (isRefreshing != null && !isRefreshing.isCompleted) {
+                      isRefreshing.complete(true);
+                    }
+                    MoviePosterInfoListRes data = snapshot.data;
+                    int itemCount;
+                    if (!snapshot.hasData) {
+                      itemCount = 1;
+                    } else {
+                      itemCount = data.page != data.totalPages
+                          ? data.results.length + 1
+                          : data.results.length;
+                    }
 
-                return PageView.builder(
-                  controller: _pageController,
-                  onPageChanged: (currentPage) {
-                    int dataSize = bloc.nowPlayingMoviesLength;
-                    if (dataSize == 0) {
-                      return;
-                    }
-                    if (currentPage >= dataSize - 3) {
-                      bloc.fetchNowPlayingMovies();
-                    }
-                  },
-                  itemBuilder: (context, pageIndex) {
-                    if (!snapshot.hasData || pageIndex >= data.results.length) {
-                      return Container(
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    return ValueListenableBuilder<double>(
-                      valueListenable: currentPageOffset,
-                      builder: (context, currentPageOffset, child) {
-                        double scaleFactor;
-                        if (pageIndex == currentPageOffset.floor()) {
-                          scaleFactor = max(
-                              0.9, 1 - (0.1 * (currentPageOffset - pageIndex)));
-                        } else if (pageIndex == currentPageOffset.ceil()) {
-                          scaleFactor = max(
-                              0.9, 1 - (0.1 * (pageIndex - currentPageOffset)));
-                        } else {
-                          scaleFactor = 0.9;
+                    return PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: (currentPage) {
+                        int dataSize = bloc.nowPlayingMoviesLength;
+                        if (dataSize == 0) {
+                          return;
                         }
-                        return Transform.scale(
-                          scale: scaleFactor,
-                          child: child,
+                        if (currentPage >= dataSize - 3) {
+                          bloc.fetchNowPlayingMovies();
+                        }
+                      },
+                      itemBuilder: (context, pageIndex) {
+                        if (!snapshot.hasData ||
+                            pageIndex >= data.results.length) {
+                          return Container(
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        return ValueListenableBuilder<double>(
+                          valueListenable: currentPageOffset,
+                          builder: (context, currentPageOffset, child) {
+                            double scaleFactor;
+                            if (pageIndex == currentPageOffset.floor()) {
+                              scaleFactor = max(0.93,
+                                  1 - (0.1 * (currentPageOffset - pageIndex)));
+                            } else if (pageIndex == currentPageOffset.ceil()) {
+                              scaleFactor = max(0.93,
+                                  1 - (0.1 * (pageIndex - currentPageOffset)));
+                            } else {
+                              scaleFactor = 0.93;
+                            }
+                            return Transform.scale(
+                              scale: scaleFactor,
+                              child: child,
+                            );
+                          },
+                          child: MoviePoster.inTheater(data.results[pageIndex]),
                         );
                       },
-                      child: MoviePoster.inTheater(data.results[pageIndex]),
+                      itemCount: itemCount,
                     );
                   },
-                  itemCount: itemCount,
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -203,7 +209,7 @@ class _UpcomingMovieState extends State<UpcomingMovie>
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.65);
+    _pageController = PageController(viewportFraction: 0.586);
     _pageController.addListener(() {
       currentPageOffset.value = _pageController.page;
     });
@@ -228,72 +234,76 @@ class _UpcomingMovieState extends State<UpcomingMovie>
               duration: Duration(milliseconds: 200), curve: Curves.easeIn);
         });
       },
-      child: ListView(
-        shrinkWrap: true,
-        children: <Widget>[
-          Container(
-            height: 618,
-            child: StreamBuilder<MoviePosterInfoListRes>(
-              stream: bloc.upcomingMovies,
-              builder: (context, snapshot) {
-                if (isRefreshing != null && !isRefreshing.isCompleted) {
-                  isRefreshing.complete(true);
-                }
-                MoviePosterInfoListRes data = snapshot.data;
-                int itemCount;
-                if (!snapshot.hasData) {
-                  itemCount = 1;
-                } else {
-                  itemCount = data.page != data.totalPages
-                      ? data.results.length + 1
-                      : data.results.length;
-                }
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return ListView(
+            shrinkWrap: true,
+            children: <Widget>[
+              Container(
+                child: StreamBuilder<MoviePosterInfoListRes>(
+                  stream: bloc.upcomingMovies,
+                  builder: (context, snapshot) {
+                    if (isRefreshing != null && !isRefreshing.isCompleted) {
+                      isRefreshing.complete(true);
+                    }
+                    MoviePosterInfoListRes data = snapshot.data;
+                    int itemCount;
+                    if (!snapshot.hasData) {
+                      itemCount = 1;
+                    } else {
+                      itemCount = data.page != data.totalPages
+                          ? data.results.length + 1
+                          : data.results.length;
+                    }
 
-                return PageView.builder(
-                  physics: BouncingScrollPhysics(),
-                  controller: _pageController,
-                  onPageChanged: (currentPage) {
-                    int dataSize = bloc.upcomingMoviesLength;
-                    if (dataSize == 0) {
-                      return;
-                    }
-                    if (currentPage >= dataSize - 3) {
-                      bloc.fetchUpcomingMovies();
-                    }
-                  },
-                  itemBuilder: (context, pageIndex) {
-                    if (!snapshot.hasData || pageIndex >= data.results.length) {
-                      return Container(
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    return ValueListenableBuilder<double>(
-                      valueListenable: currentPageOffset,
-                      builder: (context, currentPageOffset, child) {
-                        double scaleFactor;
-                        if (pageIndex == currentPageOffset.floor()) {
-                          scaleFactor = max(
-                              0.9, 1 - (0.1 * (currentPageOffset - pageIndex)));
-                        } else if (pageIndex == currentPageOffset.ceil()) {
-                          scaleFactor = max(
-                              0.9, 1 - (0.1 * (pageIndex - currentPageOffset)));
-                        } else {
-                          scaleFactor = 0.9;
+                    return PageView.builder(
+                      physics: BouncingScrollPhysics(),
+                      controller: _pageController,
+                      onPageChanged: (currentPage) {
+                        int dataSize = bloc.upcomingMoviesLength;
+                        if (dataSize == 0) {
+                          return;
                         }
-                        return Transform.scale(
-                          scale: scaleFactor,
-                          child: child,
+                        if (currentPage >= dataSize - 3) {
+                          bloc.fetchUpcomingMovies();
+                        }
+                      },
+                      itemBuilder: (context, pageIndex) {
+                        if (!snapshot.hasData ||
+                            pageIndex >= data.results.length) {
+                          return Container(
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        return ValueListenableBuilder<double>(
+                          valueListenable: currentPageOffset,
+                          builder: (context, currentPageOffset, child) {
+                            double scaleFactor;
+                            if (pageIndex == currentPageOffset.floor()) {
+                              scaleFactor = max(0.93,
+                                  1 - (0.1 * (currentPageOffset - pageIndex)));
+                            } else if (pageIndex == currentPageOffset.ceil()) {
+                              scaleFactor = max(0.93,
+                                  1 - (0.1 * (pageIndex - currentPageOffset)));
+                            } else {
+                              scaleFactor = 0.93;
+                            }
+                            return Transform.scale(
+                              scale: scaleFactor,
+                              child: child,
+                            );
+                          },
+                          child: MoviePoster.upcoming(data.results[pageIndex]),
                         );
                       },
-                      child: MoviePoster.upcoming(data.results[pageIndex]),
+                      itemCount: itemCount,
                     );
                   },
-                  itemCount: itemCount,
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -325,7 +335,7 @@ class _MoviePosterState extends State<MoviePoster>
         children: <Widget>[
           Padding(
             padding:
-                const EdgeInsets.only(left: 8, top: 25, right: 8, bottom: 30),
+                const EdgeInsets.only(left: 2, top: 25, right: 2, bottom: 30),
             child: InkWell(
               onTap: () {
                 int movieId = widget._movie.id;
@@ -339,8 +349,6 @@ class _MoviePosterState extends State<MoviePoster>
                 );
               },
               child: Container(
-                width: 220,
-                height: 325,
                 child: Card(
                   color: Colors.black12,
                   clipBehavior: Clip.antiAlias,
