@@ -91,7 +91,7 @@ class _InTheaterMovieState extends State<InTheaterMovie>
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.586);
+    _pageController = PageController(viewportFraction: 0.645);
     _pageController.addListener(() {
       currentPageOffset.value = _pageController.page;
     });
@@ -209,7 +209,7 @@ class _UpcomingMovieState extends State<UpcomingMovie>
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.586);
+    _pageController = PageController(viewportFraction: 0.645);
     _pageController.addListener(() {
       currentPageOffset.value = _pageController.page;
     });
@@ -330,52 +330,53 @@ class _MoviePosterState extends State<MoviePoster>
   Widget build(BuildContext context) {
     super.build(context);
     TextTheme textTheme = Theme.of(context).textTheme;
-    return Container(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 11),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Padding(
-            padding:
-                const EdgeInsets.only(left: 2, top: 25, right: 2, bottom: 30),
-            child: InkWell(
-              onTap: () {
-                int movieId = widget._movie.id;
-                Navigator.of(context).pushNamed(
-                  MovieDetailPage.routeName,
-                  arguments: {
-                    MovieDetailPage.movieIdParam: movieId,
-                    MovieDetailPage.posterHeroTagParam: "$movieId",
-                    MovieDetailPage.posterUrlParam: widget._movie.posterPath,
-                  },
-                );
-              },
-              child: Container(
-                child: Card(
-                  color: Colors.black12,
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 10,
-                  child: Hero(
-                    tag: "${widget._movie.id}",
-                    child: CachedNetworkImage(
-                      imageUrl:
-                          "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
-                      imageBuilder: (context, imageProvider) {
-                        return Image(
-                          image: imageProvider,
-                          fit: BoxFit.cover,
-                        );
-                      },
-                      placeholder: (context, url) {
-                        return Container(color: Colors.black12);
-                      },
-                    ),
+          InkWell(
+            onTap: () {
+              int movieId = widget._movie.id;
+              Navigator.of(context).pushNamed(
+                MovieDetailPage.routeName,
+                arguments: {
+                  MovieDetailPage.movieIdParam: movieId,
+                  MovieDetailPage.posterHeroTagParam: "$movieId",
+                  MovieDetailPage.posterUrlParam: widget._movie.posterPath,
+                },
+              );
+            },
+            child: AspectRatio(
+              aspectRatio: 2 / 3,
+              child: Card(
+                margin: EdgeInsets.zero,
+                color: Colors.black12,
+                clipBehavior: Clip.antiAlias,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 10,
+                child: Hero(
+                  tag: "${widget._movie.id}",
+                  child: CachedNetworkImage(
+                    imageUrl:
+                        "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
+                    imageBuilder: (context, imageProvider) {
+                      return Image(
+                        image: imageProvider,
+                        fit: BoxFit.cover,
+                      );
+                    },
+                    placeholder: (context, url) {
+                      return Container(color: Colors.black12);
+                    },
                   ),
                 ),
               ),
             ),
           ),
+          SizedBox(height: 30),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
