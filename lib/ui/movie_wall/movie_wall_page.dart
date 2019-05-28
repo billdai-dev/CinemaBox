@@ -326,24 +326,13 @@ class MoviePoster extends StatefulWidget {
   _MoviePosterState createState() => _MoviePosterState();
 }
 
-class _MoviePosterState extends State<MoviePoster>
-    with AutomaticKeepAliveClientMixin<MoviePoster> {
+class _MoviePosterState extends State<MoviePoster> {
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     TextTheme textTheme = Theme.of(context).textTheme;
     return GestureDetector(
-      onTap: () {
-        int movieId = widget._movie.id;
-        Navigator.of(context).pushNamed(
-          MovieDetailPage.routeName,
-          arguments: {
-            MovieDetailPage.movieIdParam: movieId,
-            MovieDetailPage.posterHeroTagParam: "$movieId",
-            MovieDetailPage.posterUrlParam: widget._movie.posterPath,
-          },
-        );
-      },
+      behavior: HitTestBehavior.translucent,
+      onTap: _pushToDetailPage,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 11),
         child: Column(
@@ -353,21 +342,30 @@ class _MoviePosterState extends State<MoviePoster>
               aspectRatio: 2 / 3,
               child: Hero(
                 tag: "${widget._movie.id}",
-                child: Card(
-                  margin: EdgeInsets.zero,
-                  color: Colors.transparent,
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 10,
-                  child: TransitionToImage(
-                    image: AdvancedNetworkImage(
-                      "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    Card(
+                      margin: EdgeInsets.zero,
+                      color: Colors.transparent,
+                      clipBehavior: Clip.antiAlias,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 10,
+                      child: TransitionToImage(
+                        image: AdvancedNetworkImage(
+                          "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
+                        ),
+                        fit: BoxFit.cover,
+                        loadingWidget: Container(color: Colors.black12),
+                      ),
                     ),
-                    fit: BoxFit.cover,
-                    loadingWidget: Container(color: Colors.black12),
-                  ),
+                    Material(
+                      type: MaterialType.transparency,
+                      child: InkWell(onTap: _pushToDetailPage),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -421,8 +419,17 @@ class _MoviePosterState extends State<MoviePoster>
     );
   }
 
-  @override
-  bool get wantKeepAlive => false;
+  void _pushToDetailPage() {
+    int movieId = widget._movie.id;
+    Navigator.of(context).pushNamed(
+      MovieDetailPage.routeName,
+      arguments: {
+        MovieDetailPage.movieIdParam: movieId,
+        MovieDetailPage.posterHeroTagParam: "$movieId",
+        MovieDetailPage.posterUrlParam: widget._movie.posterPath,
+      },
+    );
+  }
 }
 
 enum _MoviePoserType { inTheater, upcoming }
