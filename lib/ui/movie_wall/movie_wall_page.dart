@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:bloc_pattern/bloc_pattern.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 import 'package:cinema_box/ui/custom_widget/custom_app_bar.dart';
@@ -10,6 +9,8 @@ import 'package:cinema_box/ui/custom_widget/custom_widget.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_page.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_advanced_networkimage/provider.dart';
+import 'package:flutter_advanced_networkimage/transition.dart';
 
 class MovieWallPage extends StatefulWidget {
   static const String routeName = "/movieWall";
@@ -240,6 +241,7 @@ class _UpcomingMovieState extends State<UpcomingMovie>
             shrinkWrap: true,
             children: <Widget>[
               Container(
+                height: constraints.maxHeight,
                 child: StreamBuilder<MoviePosterInfoListRes>(
                   stream: bloc.upcomingMovies,
                   builder: (context, snapshot) {
@@ -330,97 +332,91 @@ class _MoviePosterState extends State<MoviePoster>
   Widget build(BuildContext context) {
     super.build(context);
     TextTheme textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 11),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          InkWell(
-            onTap: () {
-              int movieId = widget._movie.id;
-              Navigator.of(context).pushNamed(
-                MovieDetailPage.routeName,
-                arguments: {
-                  MovieDetailPage.movieIdParam: movieId,
-                  MovieDetailPage.posterHeroTagParam: "$movieId",
-                  MovieDetailPage.posterUrlParam: widget._movie.posterPath,
-                },
-              );
-            },
-            child: AspectRatio(
+    return GestureDetector(
+      onTap: () {
+        int movieId = widget._movie.id;
+        Navigator.of(context).pushNamed(
+          MovieDetailPage.routeName,
+          arguments: {
+            MovieDetailPage.movieIdParam: movieId,
+            MovieDetailPage.posterHeroTagParam: "$movieId",
+            MovieDetailPage.posterUrlParam: widget._movie.posterPath,
+          },
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 11),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            AspectRatio(
               aspectRatio: 2 / 3,
-              child: Card(
-                margin: EdgeInsets.zero,
-                color: Colors.black12,
-                clipBehavior: Clip.antiAlias,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 10,
-                child: Hero(
-                  tag: "${widget._movie.id}",
-                  child: CachedNetworkImage(
-                    imageUrl:
-                        "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
-                    imageBuilder: (context, imageProvider) {
-                      return Image(
-                        image: imageProvider,
-                        fit: BoxFit.cover,
-                      );
-                    },
-                    placeholder: (context, url) {
-                      return Container(color: Colors.black12);
-                    },
+              child: Hero(
+                tag: "${widget._movie.id}",
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  color: Colors.transparent,
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 10,
+                  child: TransitionToImage(
+                    image: AdvancedNetworkImage(
+                      "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
+                    ),
+                    fit: BoxFit.cover,
+                    loadingWidget: Container(color: Colors.black12),
                   ),
                 ),
               ),
             ),
-          ),
-          SizedBox(height: 30),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                "上映時間：${widget._movie.releaseDate.replaceAll("-", " / ")}",
-                style: textTheme.body2.copyWith(color: Colors.grey),
-              ),
-              Divider(height: 10),
-              Text(
-                "${widget._movie.title}",
-                style: textTheme.title.copyWith(fontWeight: FontWeight.bold),
-                maxLines: 2,
-                overflow: TextOverflow.fade,
-              ),
-              SizedBox(height: 2),
-              Text(
-                "${widget._movie.originalTitle}",
-                style: textTheme.body2.copyWith(color: Colors.grey),
-                maxLines: 2,
-                overflow: TextOverflow.fade,
-              ),
-              if (widget._poserType == _MoviePoserType.inTheater)
-                Divider(height: 10),
-              if (widget._poserType == _MoviePoserType.inTheater)
-                Row(
-                  children: <Widget>[
-                    Rating(widget._movie.voteAverage / 2),
-                    SizedBox(width: 4),
-                    Text(
-                      "${(widget._movie.voteAverage / 2).toStringAsPrecision(2)}",
-                      style: textTheme.body1.copyWith(color: Colors.grey),
-                    ),
-                    SizedBox(width: 2),
-                    Text(
-                      "(${widget._movie.voteCount})",
-                      style: textTheme.body1.copyWith(color: Colors.grey),
-                    ),
-                    Spacer(),
-                    //CertificationTag(),
-                  ],
+            SizedBox(height: 30),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  "上映時間：${widget._movie.releaseDate.replaceAll("-", " / ")}",
+                  style: textTheme.body2.copyWith(color: Colors.grey),
                 ),
-            ],
-          ),
-        ],
+                Divider(height: 10),
+                Text(
+                  "${widget._movie.title}",
+                  style: textTheme.title.copyWith(fontWeight: FontWeight.bold),
+                  maxLines: 2,
+                  overflow: TextOverflow.fade,
+                ),
+                SizedBox(height: 2),
+                Text(
+                  "${widget._movie.originalTitle}",
+                  style: textTheme.body2.copyWith(color: Colors.grey),
+                  maxLines: 2,
+                  overflow: TextOverflow.fade,
+                ),
+                if (widget._poserType == _MoviePoserType.inTheater)
+                  Divider(height: 10),
+                if (widget._poserType == _MoviePoserType.inTheater)
+                  Row(
+                    children: <Widget>[
+                      Rating(widget._movie.voteAverage / 2),
+                      SizedBox(width: 4),
+                      Text(
+                        "${(widget._movie.voteAverage / 2).toStringAsPrecision(2)}",
+                        style: textTheme.body1.copyWith(color: Colors.grey),
+                      ),
+                      SizedBox(width: 2),
+                      Text(
+                        "(${widget._movie.voteCount})",
+                        style: textTheme.body1.copyWith(color: Colors.grey),
+                      ),
+                      Spacer(),
+                      //CertificationTag(),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

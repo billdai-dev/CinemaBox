@@ -1,5 +1,4 @@
 import 'package:bloc_pattern/bloc_pattern.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cinema_box/data/repo/model/credit.dart';
 import 'package:cinema_box/data/repo/model/response/movie_detail_res.dart';
 import 'package:cinema_box/data/repo/model/video.dart';
@@ -11,6 +10,8 @@ import 'package:cinema_box/ui/movie_detail/movie_detail_bloc.dart';
 import 'package:cinema_box/ui/youtube_video/youtube_video_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_advanced_networkimage/provider.dart';
+import 'package:flutter_advanced_networkimage/transition.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -142,17 +143,11 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
         tag: posterHeroTag,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: CachedNetworkImage(
-            imageUrl: "${RemoteRepo.imageBaseUrl}$posterUrl",
-            imageBuilder: (context, imageProvider) {
-              return Image(
-                image: imageProvider,
-                fit: BoxFit.contain,
-              );
-            },
-            placeholder: (context, url) {
-              return Container(color: Colors.black12);
-            },
+          child: TransitionToImage(
+            image: AdvancedNetworkImage(
+              "${RemoteRepo.imageBaseUrl}$posterUrl",
+            ),
+            fit: BoxFit.cover,
           ),
         ),
       ),
@@ -280,7 +275,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
       ),
       SizedBox(height: 16),
       Container(
-        height: 100,
+        height: 120,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: casts.length,
@@ -293,8 +288,9 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                   CircleAvatar(
                     radius: 32,
                     backgroundColor: Colors.black12,
-                    backgroundImage: CachedNetworkImageProvider(
+                    backgroundImage: AdvancedNetworkImage(
                       "${RemoteRepo.imageBaseUrl}${casts[index].profilePath}",
+                      useDiskCache: true,
                     ),
                   ),
                   SizedBox(height: 5),
