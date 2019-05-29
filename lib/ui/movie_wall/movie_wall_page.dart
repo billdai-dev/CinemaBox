@@ -40,36 +40,33 @@ class _MovieWallPageState extends State<MovieWallPage>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      bloc: MovieWallBloc(),
-      child: Scaffold(
-        appBar: CustomAppBar(),
-        body: Container(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              TabBar(
+    return Scaffold(
+      appBar: CustomAppBar(),
+      body: Container(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            TabBar(
+              controller: _tabController,
+              indicatorColor: Colors.red,
+              labelColor: Colors.black,
+              unselectedLabelColor: Colors.grey,
+              indicatorWeight: 1,
+              tabs: [
+                Tab(text: "上映中"),
+                Tab(text: "即將上映"),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
                 controller: _tabController,
-                indicatorColor: Colors.red,
-                labelColor: Colors.black,
-                unselectedLabelColor: Colors.grey,
-                indicatorWeight: 1,
-                tabs: [
-                  Tab(text: "上映中"),
-                  Tab(text: "即將上映"),
+                children: <Widget>[
+                  InTheaterMovie(),
+                  UpcomingMovie(),
                 ],
               ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: <Widget>[
-                    InTheaterMovie(),
-                    UpcomingMovie(),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

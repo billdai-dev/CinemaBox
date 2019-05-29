@@ -6,10 +6,15 @@ abstract class LocalRepoContract {
   Future<bool> saveAccessToken(String token);
 
   Future<String> loadAccessToken();
+
+  Future<bool> saveAccountId(String accountId);
+
+  Future<String> loadAccountId();
 }
 
-class LocalRepo {
+class LocalRepo implements LocalRepoContract {
   static const _keyAccessToken = "accessToken";
+  static const _keyAccountId = "accountId";
 
   static final LocalRepo _localRepo = LocalRepo._();
 
@@ -27,5 +32,16 @@ class LocalRepo {
 
   Future<String> loadAccessToken() {
     return _pref.future.then((pref) => pref.getString(_keyAccessToken));
+  }
+
+  @override
+  Future<bool> saveAccountId(String accountId) {
+    return _pref.future
+        .then((pref) => pref.setString(_keyAccountId, accountId));
+  }
+
+  @override
+  Future<String> loadAccountId() {
+    return _pref.future.then((pref) => pref.getString(_keyAccountId));
   }
 }

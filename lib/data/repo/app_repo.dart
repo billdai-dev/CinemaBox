@@ -17,8 +17,11 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   AppRepo._() {
     _remoteRepo = RemoteRepo.remoteRepo;
     _localRepo = LocalRepo.localRepo;
-    _localRepo.loadAccessToken().then((token) {
+    _localRepo.loadAccessToken().then((token) async {
       _remoteRepo.accessTokenCache.complete(token);
+      await _localRepo.loadAccountId().then((accountId) {
+        _remoteRepo.accountIdCache.complete(accountId);
+      });
     });
   }
 
@@ -33,6 +36,16 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   }
 
   @override
+  Future<bool> saveAccountId(String accountId) {
+    return _localRepo.saveAccountId(accountId);
+  }
+
+  @override
+  Future<String> loadAccountId() {
+    return _localRepo.loadAccountId();
+  }
+
+  @override
   Future<RequestTokenRes> createRequestToken({String apiKey}) {
     return _remoteRepo.createRequestToken(apiKey: apiKey);
   }
@@ -40,8 +53,8 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   @override
   Future<AccessTokenRes> createAccessToken(String requestToken) async {
     AccessTokenRes response = await _remoteRepo.createAccessToken(requestToken);
-    String accessToken = response.accessToken;
-    await _localRepo.saveAccessToken(accessToken);
+    await _localRepo.saveAccessToken(response.accessToken);
+    await _localRepo.saveAccountId(response.accountId);
     return response;
   }
 
@@ -60,5 +73,10 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
       {List<String> appendToResponse, bool isChinese = true}) {
     return _remoteRepo.getMovieDetail(movieId,
         appendToResponse: appendToResponse, isChinese: isChinese);
+  }
+
+  @override
+  Future<MoviePosterInfoListRes> getFavoriteMovies(int page) {
+    return _remoteRepo.getFavoriteMovies(page);
   }
 }
