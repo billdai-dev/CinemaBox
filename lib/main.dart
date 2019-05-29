@@ -1,5 +1,6 @@
 import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:cinema_box/ui/app_bloc.dart';
+import 'package:cinema_box/ui/favorite/favorite_movie_page.dart';
 import 'package:cinema_box/ui/login/login_bloc.dart';
 import 'package:cinema_box/ui/login/login_web_view.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_bloc.dart';
@@ -96,7 +97,7 @@ class _MainPageState extends State<MainPage> {
     navKeyPageMapping = {
       GlobalKey(debugLabel: "MovieWall"): MovieWallPage(),
       GlobalKey(debugLabel: "Search"): Container(),
-      GlobalKey(debugLabel: "MyFavorite"): Container(),
+      GlobalKey(debugLabel: "MyFavorite"): FavoriteMoviePage(),
       GlobalKey(debugLabel: "Profile"): Container(),
     };
   }

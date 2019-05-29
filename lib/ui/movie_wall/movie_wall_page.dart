@@ -315,12 +315,12 @@ class _UpcomingMovieState extends State<UpcomingMovie>
 }
 
 class MoviePoster extends StatefulWidget {
-  final _MoviePoserType _poserType;
+  final _MoviePoserType _posterType;
   final MoviePosterInfo _movie;
 
-  MoviePoster.inTheater(this._movie) : _poserType = _MoviePoserType.inTheater;
+  MoviePoster.inTheater(this._movie) : _posterType = _MoviePoserType.inTheater;
 
-  MoviePoster.upcoming(this._movie) : _poserType = _MoviePoserType.upcoming;
+  MoviePoster.upcoming(this._movie) : _posterType = _MoviePoserType.upcoming;
 
   @override
   _MoviePosterState createState() => _MoviePosterState();
@@ -341,7 +341,7 @@ class _MoviePosterState extends State<MoviePoster> {
             AspectRatio(
               aspectRatio: 2 / 3,
               child: Hero(
-                tag: "${widget._movie.id}",
+                tag: "MovieWall_${widget._movie.id}",
                 child: Stack(
                   fit: StackFit.expand,
                   children: <Widget>[
@@ -391,9 +391,9 @@ class _MoviePosterState extends State<MoviePoster> {
                   maxLines: 2,
                   overflow: TextOverflow.fade,
                 ),
-                if (widget._poserType == _MoviePoserType.inTheater)
+                if (widget._posterType == _MoviePoserType.inTheater)
                   Divider(height: 10),
-                if (widget._poserType == _MoviePoserType.inTheater)
+                if (widget._posterType == _MoviePoserType.inTheater)
                   Row(
                     children: <Widget>[
                       Rating(widget._movie.voteAverage / 2),
