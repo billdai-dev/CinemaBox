@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
+import 'package:cinema_box/data/repo/model/response/account_state_res.dart';
+import 'package:cinema_box/data/repo/model/response/create_session_id_res.dart';
 import 'package:cinema_box/data/repo/model/response/movie_detail_res.dart';
 import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
@@ -11,6 +13,8 @@ abstract class RemoteRepoContract {
 
   Future<AccessTokenRes> createAccessToken(String requestToken);
 
+  Future<CreateSessionIdRes> createSessionId(String accessToken);
+
   Future<MoviePosterInfoListRes> getNowPlayingMovies(int page);
 
   Future<MoviePosterInfoListRes> getUpcomingMovies(int page);
@@ -18,7 +22,11 @@ abstract class RemoteRepoContract {
   Future<MovieDetailRes> getMovieDetail(int movieId,
       {List<String> appendToResponse, bool isChinese = true});
 
+  Future<AccountStateRes> getAccountState(int movieId);
+
   Future<MoviePosterInfoListRes> getFavoriteMovies(int page);
+
+  Future<bool> markAsFavorite(int movieId, bool isFavorite);
 }
 
 class RemoteRepo implements RemoteRepoContract {
@@ -32,6 +40,7 @@ class RemoteRepo implements RemoteRepoContract {
 
   final Completer<String> accessTokenCache = Completer();
   final Completer<String> accountIdCache = Completer();
+  final Completer<String> sessionIdCache = Completer();
 
   Dio _dioV3;
   Dio _dioV4;
@@ -39,9 +48,6 @@ class RemoteRepo implements RemoteRepoContract {
   String _apiKeyV3 = "60ec67cdfd3973f8430814b7217fa490";
   String _apiAccessToken =
       "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2MGVjNjdjZGZkMzk3M2Y4NDMwODE0YjcyMTdmYTQ5MCIsInN1YiI6IjVjYjU5NDg3YzNhMzY4NmFlYjgxNWM3OCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.D8SYlMu04VCxhDi1N3aN0I8betW_4SLRMTxr4aopYQs";
-
-  //String _accessToken;
-  String _sessionId;
 
   RemoteRepo._() {
     _initDio();
@@ -67,6 +73,20 @@ class RemoteRepo implements RemoteRepoContract {
       }
       if (!accountIdCache.isCompleted) {
         accountIdCache.complete(res.accountId);
+      }
+      return res;
+    });
+  }
+
+  @override
+  Future<CreateSessionIdRes> createSessionId(String accessToken) {
+    return _dioV3.post(
+      "/authentication/session/convert/4",
+      data: {"access_token": accessToken},
+    ).then((response) {
+      CreateSessionIdRes res = CreateSessionIdRes.fromJson(response.data);
+      if (!sessionIdCache.isCompleted) {
+        sessionIdCache.complete(res.sessionId);
       }
       return res;
     });
@@ -116,12 +136,35 @@ class RemoteRepo implements RemoteRepoContract {
   }
 
   @override
+  Future<AccountStateRes> getAccountState(int movieId) async {
+    String sessionId = await sessionIdCache.future;
+    return _dioV3.get("/movie/$movieId/account_states", queryParameters: {
+      "session_id": sessionId
+    }).then((response) => AccountStateRes.fromJson(response.data));
+  }
+
+  @override
   Future<MoviePosterInfoListRes> getFavoriteMovies(int page) async {
     String accountId = await accountIdCache.future;
     return _dioV4.get(
       "/account/$accountId/movie/favorites",
       queryParameters: {"page": page, "sort_by": "created_at.desc"},
     ).then((response) => MoviePosterInfoListRes.fromJson(response.data));
+  }
+
+  @override
+  Future<bool> markAsFavorite(int movieId, bool isFavorite) async {
+    String accountId = await accountIdCache.future;
+    String sessionId = await sessionIdCache.future;
+    return _dioV3.post("/account/$accountId/favorite", queryParameters: {
+      "session_id": sessionId
+    }, data: {
+      "media_type": "movie",
+      "media_id": movieId,
+      "favorite": isFavorite,
+    }).then((response) {
+      return response.statusCode >= 200 && response.statusCode < 400;
+    });
   }
 
   void _initDio() {

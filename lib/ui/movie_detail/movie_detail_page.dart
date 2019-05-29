@@ -12,7 +12,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_networkimage/provider.dart';
 import 'package:flutter_advanced_networkimage/transition.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class MovieDetailPage extends StatefulWidget {
@@ -155,6 +154,8 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
   }
 
   Widget _buildTitles(MovieDetailRes data) {
+    MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
+
     String rating = (data.voteAverage / 2).toStringAsPrecision(2);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -163,7 +164,35 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
         Container(
           alignment: Alignment.centerRight,
           margin: const EdgeInsets.only(right: 15),
-          child: Icon(FontAwesomeIcons.heart),
+          child: StreamBuilder<bool>(
+            stream: bloc.isFavorite,
+            builder: (context, snapshot) {
+              bool isFavorite = snapshot.data;
+              return IconButton(
+                icon: Icon(
+                  isFavorite ?? false ? Icons.favorite : Icons.favorite_border,
+                ),
+                color:
+                    isFavorite == null ? Colors.transparent : Colors.redAccent,
+                onPressed: () {
+                  bloc.setAsFavorite().then((isSuccess) {
+                    if (!isSuccess) {
+                      throw AssertionError("Set as favorite failed");
+                    }
+                  }).catchError(
+                    (error) {
+                      Scaffold.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("收藏失敗，請稍後重試"),
+                        ),
+                      );
+                      bloc.isFavorite.add(isFavorite);
+                    },
+                  );
+                },
+              );
+            },
+          ),
         ),
         SizedBox(height: 20),
         Text("上映時間：${data.releaseDate.replaceAll("-", " / ")}"),

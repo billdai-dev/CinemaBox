@@ -1,5 +1,7 @@
 import 'package:cinema_box/data/repo/model/local/local_repo.dart';
 import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
+import 'package:cinema_box/data/repo/model/response/account_state_res.dart';
+import 'package:cinema_box/data/repo/model/response/create_session_id_res.dart';
 import 'package:cinema_box/data/repo/model/response/movie_detail_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
@@ -21,6 +23,9 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
       _remoteRepo.accessTokenCache.complete(token);
       await _localRepo.loadAccountId().then((accountId) {
         _remoteRepo.accountIdCache.complete(accountId);
+      });
+      await _localRepo.loadSessionId().then((seesionId) {
+        _remoteRepo.sessionIdCache.complete(seesionId);
       });
     });
   }
@@ -46,6 +51,16 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   }
 
   @override
+  Future<bool> saveSessionId(String sessionId) {
+    return _localRepo.saveSessionId(sessionId);
+  }
+
+  @override
+  Future<String> loadSessionId() {
+    return _localRepo.loadSessionId();
+  }
+
+  @override
   Future<RequestTokenRes> createRequestToken({String apiKey}) {
     return _remoteRepo.createRequestToken(apiKey: apiKey);
   }
@@ -55,6 +70,15 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
     AccessTokenRes response = await _remoteRepo.createAccessToken(requestToken);
     await _localRepo.saveAccessToken(response.accessToken);
     await _localRepo.saveAccountId(response.accountId);
+    await createSessionId(response.accessToken);
+    return response;
+  }
+
+  @override
+  Future<CreateSessionIdRes> createSessionId(String accessToken) async {
+    CreateSessionIdRes response =
+        await _remoteRepo.createSessionId(accessToken);
+    await _localRepo.saveSessionId(response.sessionId);
     return response;
   }
 
@@ -76,7 +100,17 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   }
 
   @override
+  Future<AccountStateRes> getAccountState(int movieId) {
+    return _remoteRepo.getAccountState(movieId);
+  }
+
+  @override
   Future<MoviePosterInfoListRes> getFavoriteMovies(int page) {
     return _remoteRepo.getFavoriteMovies(page);
+  }
+
+  @override
+  Future<bool> markAsFavorite(int movieId, bool isFavorite) {
+    return _remoteRepo.markAsFavorite(movieId, isFavorite);
   }
 }
