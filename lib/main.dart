@@ -16,6 +16,34 @@ void main() => runApp(
       ),
     );
 
+Route<dynamic> _generateRoute(RouteSettings routeSetting, {Widget child}) {
+  String routeName = routeSetting.name;
+  String lastRoute = routeName.substring(routeSetting.name.lastIndexOf("/"));
+  return MaterialPageRoute(
+    builder: (context) {
+      switch (lastRoute) {
+        case MovieDetailPage.routeName:
+          return BlocProvider<MovieDetailBloc>(
+            bloc: MovieDetailBloc(),
+            child: MovieDetailPage(),
+          );
+        case YoutubeVideoPage.routeName:
+          return YoutubeVideoPage();
+        default:
+          if (child != null &&
+              (routeName == "/" || routeSetting.isInitialRoute)) {
+            return child;
+          }
+          return Container(
+            alignment: Alignment.center,
+            child: Text("Page not found"),
+          );
+      }
+    },
+    settings: routeSetting,
+  );
+}
+
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
@@ -36,9 +64,7 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.blue,
       ),
       home: MainPage(),
-      routes: {
-        YoutubeVideoPage.routeName: (context) => YoutubeVideoPage(),
-      },
+      onGenerateRoute: (routeSetting) => _generateRoute(routeSetting),
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
           builder: (context) {
@@ -152,35 +178,14 @@ class _MainPageState extends State<MainPage> {
 
   Widget _buildBottomBarTab(GlobalKey<NavigatorState> navigatorKey, int index,
       int curIndex, Widget child) {
-    RouteFactory routeFactory = (routeSetting) {
-      return MaterialPageRoute(
-        builder: (context) {
-          switch (routeSetting.name) {
-            case "/":
-              return child;
-            case MovieDetailPage.routeName:
-              return BlocProvider<MovieDetailBloc>(
-                bloc: MovieDetailBloc(),
-                child: MovieDetailPage(),
-              );
-            default:
-              return Container(
-                alignment: Alignment.center,
-                child: Text("Page not found"),
-              );
-          }
-        },
-        settings: routeSetting,
-      );
-    };
-
     return Visibility(
       maintainState: true,
       maintainAnimation: true,
       visible: index == curIndex,
       child: Navigator(
         key: navigatorKey,
-        onGenerateRoute: routeFactory,
+        onGenerateRoute: (routeSetting) =>
+            _generateRoute(routeSetting, child: child),
         observers: [HeroController()],
       ),
     );
