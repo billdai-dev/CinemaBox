@@ -24,10 +24,26 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
       await _localRepo.loadAccountId().then((accountId) {
         _remoteRepo.accountIdCache.complete(accountId);
       });
-      await _localRepo.loadSessionId().then((seesionId) {
-        _remoteRepo.sessionIdCache.complete(seesionId);
+      await _localRepo.loadSessionId().then((sessionId) {
+        _remoteRepo.sessionIdCache.complete(sessionId);
       });
     });
+  }
+
+  Future<bool> isUserLoggedIn() async {
+    String accessToken = await loadAccessToken();
+    if (accessToken == null || accessToken.isEmpty) {
+      return false;
+    }
+    String accountId = await loadSessionId();
+    if (accountId == null || accountId.isEmpty) {
+      return false;
+    }
+    String sessionId = await loadSessionId();
+    if (sessionId == null || sessionId.isEmpty) {
+      return false;
+    }
+    return true;
   }
 
   @override

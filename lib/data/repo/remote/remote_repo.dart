@@ -38,9 +38,9 @@ class RemoteRepo implements RemoteRepoContract {
 
   static RemoteRepo get remoteRepo => _remoteRepo;
 
-  final Completer<String> accessTokenCache = Completer();
-  final Completer<String> accountIdCache = Completer();
-  final Completer<String> sessionIdCache = Completer();
+  Completer<String> accessTokenCache = Completer();
+  Completer<String> accountIdCache = Completer();
+  Completer<String> sessionIdCache = Completer();
 
   Dio _dioV3;
   Dio _dioV4;
@@ -68,12 +68,14 @@ class RemoteRepo implements RemoteRepoContract {
       data: {"request_token": requestToken},
     ).then((response) {
       AccessTokenRes res = AccessTokenRes.fromJson(response.data);
-      if (!accessTokenCache.isCompleted) {
-        accessTokenCache.complete(res.accessToken);
+      if (accessTokenCache.isCompleted) {
+        accessTokenCache = Completer();
       }
-      if (!accountIdCache.isCompleted) {
-        accountIdCache.complete(res.accountId);
+      accessTokenCache.complete(res.accessToken);
+      if (accountIdCache.isCompleted) {
+        accountIdCache = Completer();
       }
+      accountIdCache.complete(res.accountId);
       return res;
     });
   }
@@ -85,9 +87,10 @@ class RemoteRepo implements RemoteRepoContract {
       data: {"access_token": accessToken},
     ).then((response) {
       CreateSessionIdRes res = CreateSessionIdRes.fromJson(response.data);
-      if (!sessionIdCache.isCompleted) {
-        sessionIdCache.complete(res.sessionId);
+      if (sessionIdCache.isCompleted) {
+        sessionIdCache = Completer();
       }
+      sessionIdCache.complete(res.sessionId);
       return res;
     });
   }
@@ -138,6 +141,9 @@ class RemoteRepo implements RemoteRepoContract {
   @override
   Future<AccountStateRes> getAccountState(int movieId) async {
     String sessionId = await sessionIdCache.future;
+    if (sessionId == null || movieId == null) {
+      return null;
+    }
     return _dioV3.get("/movie/$movieId/account_states", queryParameters: {
       "session_id": sessionId
     }).then((response) => AccountStateRes.fromJson(response.data));

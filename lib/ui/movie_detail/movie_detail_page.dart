@@ -6,6 +6,7 @@ import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 import 'package:cinema_box/ui/app_bloc.dart';
 import 'package:cinema_box/ui/custom_widget/custom_app_bar.dart';
 import 'package:cinema_box/ui/custom_widget/custom_widget.dart';
+import 'package:cinema_box/ui/custom_widget/login_prompt_dialog.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_bloc.dart';
 import 'package:cinema_box/ui/youtube_video/youtube_video_page.dart';
 import 'package:flutter/cupertino.dart';
@@ -25,26 +26,40 @@ class MovieDetailPage extends StatefulWidget {
 }
 
 class _MovieDetailPageState extends State<MovieDetailPage> {
+  MovieDetailBloc bloc;
   String posterHeroTag;
   int movieId;
   String posterUrl;
   ValueNotifier<int> segmentedControlIndex = ValueNotifier(0);
 
   @override
+  void initState() {
+    super.initState();
+    bloc = MovieDetailBloc();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
     Map<String, dynamic> args = ModalRoute.of(context).settings.arguments;
     posterHeroTag = args[MovieDetailPage.posterHeroTagParam] ?? "";
     movieId = args[MovieDetailPage.movieIdParam] ?? 0;
     posterUrl = args[MovieDetailPage.posterUrlParam] ?? "";
+
+    //MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
     bloc.fetchMovieDetail.add(movieId);
+  }
+
+  @override
+  void dispose() {
+    bloc.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     TextTheme textTheme = Theme.of(context).textTheme;
-    MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
+    //MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
 
     return Scaffold(
       appBar: CustomAppBar(),
@@ -154,7 +169,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
   }
 
   Widget _buildTitles(MovieDetailRes data) {
-    MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
+    //MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
 
     String rating = (data.voteAverage / 2).toStringAsPrecision(2);
     return Column(
@@ -172,9 +187,27 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                 icon: Icon(
                   isFavorite ?? false ? Icons.favorite : Icons.favorite_border,
                 ),
-                color:
-                    isFavorite == null ? Colors.transparent : Colors.redAccent,
-                onPressed: () {
+                color: isFavorite == null ? Colors.black54 : Colors.redAccent,
+                onPressed: () async {
+                  AppBloc appBloc = BlocProviderList.of<AppBloc>(context);
+                  if (!appBloc.isLoggedIn.value ?? false) {
+                    bool isLoginSuccess = await showDialog(
+                      context: context,
+                      builder: (context) {
+                        return LoginPromptDialog();
+                      },
+                    );
+                    if (isLoginSuccess) {
+                      await bloc.getFavoriteState();
+                    }
+                    return;
+                    /*bool isLoginSuccess = await appBloc.appNavKey.currentState
+                        .pushNamed<dynamic>(LoginWebViewPage.routeName);
+                    if (!(isLoginSuccess ?? false)) {
+                      return;
+                    }*/
+                  }
+
                   bloc.setAsFavorite().then((isSuccess) {
                     if (!isSuccess) {
                       throw AssertionError("Set as favorite failed");

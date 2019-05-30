@@ -4,7 +4,6 @@ import 'package:cinema_box/ui/favorite/favorite_movie_bloc.dart';
 import 'package:cinema_box/ui/favorite/favorite_movie_page.dart';
 import 'package:cinema_box/ui/login/login_bloc.dart';
 import 'package:cinema_box/ui/login/login_web_view.dart';
-import 'package:cinema_box/ui/movie_detail/movie_detail_bloc.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_page.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_bloc.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_page.dart';
@@ -26,18 +25,16 @@ Route<dynamic> _generateRoute(RouteSettings routeSetting, {Widget child}) {
     builder: (context) {
       switch (lastRoute) {
         case MovieDetailPage.routeName:
-          return BlocProvider<MovieDetailBloc>(
-            bloc: MovieDetailBloc(),
-            child: MovieDetailPage(),
-          );
+          return MovieDetailPage();
         case YoutubeVideoPage.routeName:
           return YoutubeVideoPage();
         case FavoriteMoviePage.routeName:
-          return BlocProvider<FavoriteMovieBloc>(
-            bloc: FavoriteMovieBloc(),
-            child: FavoriteMoviePage(),
+          return FavoriteMoviePage();
+        case LoginWebViewPage.routeName:
+          return BlocProvider<LoginBloc>(
+            bloc: LoginBloc(),
+            child: LoginWebViewPage(),
           );
-
         default:
           if (child != null &&
               (routeName == "/" || routeSetting.isInitialRoute)) {
@@ -142,28 +139,6 @@ class _MainPageState extends State<MainPage> {
               _buildBottomBarTab(navKeyPageMapping.keys.toList()[i], i,
                   tabIndex, navKeyPageMapping.values.toList()[i]),
           ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            bool isLoginSuccess = await Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, anim1, anim2) {
-                      return BlocProvider<LoginBloc>(
-                          bloc: LoginBloc(), child: LoginWebViewPage());
-                    },
-                    transitionsBuilder: (context, anim1, anim2, child) {
-                      return child;
-                    },
-                  ),
-                ) ??
-                false;
-            scaffoldKey.currentState.showSnackBar(SnackBar(
-              content:
-                  Text(isLoginSuccess ? "Login Success!" : "Login failed!"),
-            ));
-          },
-          child: Icon(Icons.vpn_key),
         ),
       ),
     );

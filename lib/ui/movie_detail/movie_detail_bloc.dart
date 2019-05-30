@@ -17,6 +17,7 @@ class MovieDetailBloc extends BlocBase {
   final BehaviorSubject<bool> isFavorite = BehaviorSubject();
 
   MovieDetailBloc({AppRepo repo}) : _repo = repo ?? AppRepo.repo {
+    print("BLOC REBUILD");
     _fetchMovieDetail.listen((movieId) {
       Future<MovieDetailRes> chineseMovieDetail = _repo.getMovieDetail(
         movieId,
@@ -39,12 +40,7 @@ class MovieDetailBloc extends BlocBase {
         _movieDetail.add(chineseMovieData);
       });
 
-      _repo.getAccountState(movieId).then((accountState) {
-        if (isFavorite.isClosed) {
-          return;
-        }
-        isFavorite.add(accountState.favorite);
-      });
+      getFavoriteState(movieId: movieId);
     });
   }
 
@@ -61,7 +57,20 @@ class MovieDetailBloc extends BlocBase {
       return false;
     }
     bool originalFavorite = isFavorite.value;
+    if (originalFavorite == null) {
+      return false;
+    }
     isFavorite.add(!originalFavorite);
     return _repo.markAsFavorite(movieId, !originalFavorite);
+  }
+
+  Future<void> getFavoriteState({int movieId}) {
+    movieId ??= _movieDetail.value?.id;
+    return _repo.getAccountState(movieId).then((accountState) {
+      if (accountState == null || isFavorite.isClosed) {
+        return;
+      }
+      isFavorite.add(accountState.favorite);
+    });
   }
 }

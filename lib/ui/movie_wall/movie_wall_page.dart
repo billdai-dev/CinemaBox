@@ -315,9 +315,13 @@ class MoviePoster extends StatefulWidget {
   final _MoviePoserType _posterType;
   final MoviePosterInfo _movie;
 
-  MoviePoster.inTheater(this._movie) : _posterType = _MoviePoserType.inTheater;
+  MoviePoster.inTheater(this._movie)
+      : _posterType = _MoviePoserType.inTheater,
+        super(key: ValueKey(_movie.id));
 
-  MoviePoster.upcoming(this._movie) : _posterType = _MoviePoserType.upcoming;
+  MoviePoster.upcoming(this._movie)
+      : _posterType = _MoviePoserType.upcoming,
+        super(key: ValueKey(_movie.id));
 
   @override
   _MoviePosterState createState() => _MoviePosterState();
@@ -422,7 +426,7 @@ class _MoviePosterState extends State<MoviePoster> {
       MovieDetailPage.routeName,
       arguments: {
         MovieDetailPage.movieIdParam: movieId,
-        MovieDetailPage.posterHeroTagParam: "$movieId",
+        MovieDetailPage.posterHeroTagParam: "MovieWall_$movieId",
         MovieDetailPage.posterUrlParam: widget._movie.posterPath,
       },
     );

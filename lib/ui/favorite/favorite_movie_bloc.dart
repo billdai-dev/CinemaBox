@@ -13,7 +13,7 @@ class FavoriteMovieBloc extends BlocBase {
   Stream<MoviePosterInfoListRes> get favoriteMovies => _favoriteMovies.stream;
 
   final BehaviorSubject<Pair<bool, int>> _fetchFavoriteMovies =
-      BehaviorSubject(seedValue: Pair(true, 1));
+      BehaviorSubject();
 
   Observable<Pair<bool, int>> _fetchFavoriteMoviesStream;
 
@@ -28,7 +28,7 @@ class FavoriteMovieBloc extends BlocBase {
       return prev.second == next.second;
     }).listen((fetchConfig) {
       _repo.getFavoriteMovies(fetchConfig.second).then((res) {
-        if (_favoriteMovies.isClosed) {
+        if (res == null || _favoriteMovies.isClosed) {
           return;
         }
         bool isRefreshed = fetchConfig.first;
