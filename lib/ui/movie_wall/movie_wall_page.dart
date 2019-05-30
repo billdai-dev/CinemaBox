@@ -40,36 +40,33 @@ class _MovieWallPageState extends State<MovieWallPage>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      bloc: MovieWallBloc(),
-      child: Scaffold(
-        appBar: CustomAppBar(),
-        body: Container(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              TabBar(
+    return Scaffold(
+      appBar: CustomAppBar(),
+      body: Container(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            TabBar(
+              controller: _tabController,
+              indicatorColor: Colors.red,
+              labelColor: Colors.black,
+              unselectedLabelColor: Colors.grey,
+              indicatorWeight: 1,
+              tabs: [
+                Tab(text: "上映中"),
+                Tab(text: "即將上映"),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
                 controller: _tabController,
-                indicatorColor: Colors.red,
-                labelColor: Colors.black,
-                unselectedLabelColor: Colors.grey,
-                indicatorWeight: 1,
-                tabs: [
-                  Tab(text: "上映中"),
-                  Tab(text: "即將上映"),
+                children: <Widget>[
+                  InTheaterMovie(),
+                  UpcomingMovie(),
                 ],
               ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: <Widget>[
-                    InTheaterMovie(),
-                    UpcomingMovie(),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -315,12 +312,16 @@ class _UpcomingMovieState extends State<UpcomingMovie>
 }
 
 class MoviePoster extends StatefulWidget {
-  final _MoviePoserType _poserType;
+  final _MoviePoserType _posterType;
   final MoviePosterInfo _movie;
 
-  MoviePoster.inTheater(this._movie) : _poserType = _MoviePoserType.inTheater;
+  MoviePoster.inTheater(this._movie)
+      : _posterType = _MoviePoserType.inTheater,
+        super(key: ValueKey(_movie.id));
 
-  MoviePoster.upcoming(this._movie) : _poserType = _MoviePoserType.upcoming;
+  MoviePoster.upcoming(this._movie)
+      : _posterType = _MoviePoserType.upcoming,
+        super(key: ValueKey(_movie.id));
 
   @override
   _MoviePosterState createState() => _MoviePosterState();
@@ -341,7 +342,7 @@ class _MoviePosterState extends State<MoviePoster> {
             AspectRatio(
               aspectRatio: 2 / 3,
               child: Hero(
-                tag: "${widget._movie.id}",
+                tag: "MovieWall_${widget._movie.id}",
                 child: Stack(
                   fit: StackFit.expand,
                   children: <Widget>[
@@ -391,9 +392,9 @@ class _MoviePosterState extends State<MoviePoster> {
                   maxLines: 2,
                   overflow: TextOverflow.fade,
                 ),
-                if (widget._poserType == _MoviePoserType.inTheater)
+                if (widget._posterType == _MoviePoserType.inTheater)
                   Divider(height: 10),
-                if (widget._poserType == _MoviePoserType.inTheater)
+                if (widget._posterType == _MoviePoserType.inTheater)
                   Row(
                     children: <Widget>[
                       Rating(widget._movie.voteAverage / 2),
@@ -425,7 +426,7 @@ class _MoviePosterState extends State<MoviePoster> {
       MovieDetailPage.routeName,
       arguments: {
         MovieDetailPage.movieIdParam: movieId,
-        MovieDetailPage.posterHeroTagParam: "$movieId",
+        MovieDetailPage.posterHeroTagParam: "MovieWall_$movieId",
         MovieDetailPage.posterUrlParam: widget._movie.posterPath,
       },
     );

@@ -1,9 +1,11 @@
 import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:cinema_box/ui/app_bloc.dart';
+import 'package:cinema_box/ui/favorite/favorite_movie_bloc.dart';
+import 'package:cinema_box/ui/favorite/favorite_movie_page.dart';
 import 'package:cinema_box/ui/login/login_bloc.dart';
 import 'package:cinema_box/ui/login/login_web_view.dart';
-import 'package:cinema_box/ui/movie_detail/movie_detail_bloc.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_page.dart';
+import 'package:cinema_box/ui/movie_wall/movie_wall_bloc.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_page.dart';
 import 'package:cinema_box/ui/youtube_video/youtube_video_page.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,38 @@ void main() => runApp(
         child: MyApp(),
       ),
     );
+
+Route<dynamic> _generateRoute(RouteSettings routeSetting, {Widget child}) {
+  String routeName = routeSetting.name;
+  String lastRoute = routeName.substring(routeSetting.name.lastIndexOf("/"));
+  return MaterialPageRoute(
+    builder: (context) {
+      switch (lastRoute) {
+        case MovieDetailPage.routeName:
+          return MovieDetailPage();
+        case YoutubeVideoPage.routeName:
+          return YoutubeVideoPage();
+        case FavoriteMoviePage.routeName:
+          return FavoriteMoviePage();
+        case LoginWebViewPage.routeName:
+          return BlocProvider<LoginBloc>(
+            bloc: LoginBloc(),
+            child: LoginWebViewPage(),
+          );
+        default:
+          if (child != null &&
+              (routeName == "/" || routeSetting.isInitialRoute)) {
+            return child;
+          }
+          return Container(
+            alignment: Alignment.center,
+            child: Text("Page not found"),
+          );
+      }
+    },
+    settings: routeSetting,
+  );
+}
 
 class MyApp extends StatefulWidget {
   @override
@@ -31,14 +65,11 @@ class _MyAppState extends State<MyApp> {
 
     return MaterialApp(
       navigatorKey: _navigatorKey,
-      title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
       home: MainPage(),
-      routes: {
-        YoutubeVideoPage.routeName: (context) => YoutubeVideoPage(),
-      },
+      onGenerateRoute: (routeSetting) => _generateRoute(routeSetting),
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
           builder: (context) {
@@ -68,9 +99,15 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     navKeyPageMapping = {
-      GlobalKey(debugLabel: "MovieWall"): MovieWallPage(),
+      GlobalKey(debugLabel: "MovieWall"): BlocProvider(
+        bloc: MovieWallBloc(),
+        child: MovieWallPage(),
+      ),
       GlobalKey(debugLabel: "Search"): Container(),
-      GlobalKey(debugLabel: "MyFavorite"): Container(),
+      GlobalKey(debugLabel: "MyFavorite"): BlocProvider<FavoriteMovieBloc>(
+        bloc: FavoriteMovieBloc(),
+        child: FavoriteMoviePage(),
+      ),
       GlobalKey(debugLabel: "Profile"): Container(),
     };
   }
@@ -103,28 +140,6 @@ class _MainPageState extends State<MainPage> {
                   tabIndex, navKeyPageMapping.values.toList()[i]),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            bool isLoginSuccess = await Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, anim1, anim2) {
-                      return BlocProvider<LoginBloc>(
-                          bloc: LoginBloc(), child: LoginWebViewPage());
-                    },
-                    transitionsBuilder: (context, anim1, anim2, child) {
-                      return child;
-                    },
-                  ),
-                ) ??
-                false;
-            scaffoldKey.currentState.showSnackBar(SnackBar(
-              content:
-                  Text(isLoginSuccess ? "Login Success!" : "Login failed!"),
-            ));
-          },
-          child: Icon(Icons.vpn_key),
-        ),
       ),
     );
   }
@@ -152,35 +167,14 @@ class _MainPageState extends State<MainPage> {
 
   Widget _buildBottomBarTab(GlobalKey<NavigatorState> navigatorKey, int index,
       int curIndex, Widget child) {
-    RouteFactory routeFactory = (routeSetting) {
-      return MaterialPageRoute(
-        builder: (context) {
-          switch (routeSetting.name) {
-            case "/":
-              return child;
-            case MovieDetailPage.routeName:
-              return BlocProvider<MovieDetailBloc>(
-                bloc: MovieDetailBloc(),
-                child: MovieDetailPage(),
-              );
-            default:
-              return Container(
-                alignment: Alignment.center,
-                child: Text("Page not found"),
-              );
-          }
-        },
-        settings: routeSetting,
-      );
-    };
-
     return Visibility(
       maintainState: true,
       maintainAnimation: true,
       visible: index == curIndex,
       child: Navigator(
         key: navigatorKey,
-        onGenerateRoute: routeFactory,
+        onGenerateRoute: (routeSetting) =>
+            _generateRoute(routeSetting, child: child),
         observers: [HeroController()],
       ),
     );

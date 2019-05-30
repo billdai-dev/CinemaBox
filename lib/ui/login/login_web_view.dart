@@ -1,9 +1,12 @@
 import 'package:bloc_pattern/bloc_pattern.dart';
+import 'package:cinema_box/ui/app_bloc.dart';
 import 'package:cinema_box/ui/login/login_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappbrowser/flutter_inappbrowser.dart';
 
 class LoginWebViewPage extends StatefulWidget {
+  static const String routeName = "/loginWebView";
+
   @override
   _LoginWebViewPageState createState() => _LoginWebViewPageState();
 }
@@ -13,6 +16,7 @@ class _LoginWebViewPageState extends State<LoginWebViewPage> {
       "https://www.themoviedb.org/auth/access?request_token=";
 
   bool isBrowserOpened = false;
+  bool isUserLoggingIn = false;
   InAppBrowser browser;
 
   @override
@@ -27,43 +31,69 @@ class _LoginWebViewPageState extends State<LoginWebViewPage> {
       });
       setState(() => isBrowserOpened = true);
     });
-    browser ??= _MyInAppBrowser(context, bloc);
+    browser ??= _MyInAppBrowser(
+      context,
+      onUserLogin: () {
+        setState(() => isUserLoggingIn = true);
+        bloc.generateAccessToken().then((isSuccess) {
+          AppBloc appBloc = BlocProviderList.of<AppBloc>(context);
+          appBloc.isLoggedIn.add(isSuccess == true);
+          Navigator.pop(context, isSuccess);
+        });
+      },
+    );
   }
 
   @override
   void dispose() {
-    browser?.close();
+    if (browser.isOpened()) {
+      browser?.close();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    //LoginBloc bloc = BlocProvider.of<LoginBloc>(context);
-
     return Scaffold(
       body: Container(
         alignment: Alignment.center,
-        child: isBrowserOpened ? null : CircularProgressIndicator(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            CircularProgressIndicator(),
+            if (isUserLoggingIn)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text("正在為您登入中"),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _MyInAppBrowser extends InAppBrowser {
-  final BuildContext context;
-  final LoginBloc bloc;
+  final BuildContext _context;
+  final VoidCallback _onUserLogin;
+  bool isUserLoggedIn = false;
 
-  _MyInAppBrowser(this.context, this.bloc);
+  _MyInAppBrowser(this._context, {VoidCallback onUserLogin})
+      : _onUserLogin = onUserLogin;
 
   @override
   void onLoadStart(String url) {
     if (url.contains("/auth/access/approve")) {
-      Future.delayed(Duration(milliseconds: 500)).then((_) {
-        return bloc.generateAccessToken();
-      }).then((isSuccess) async {
-        await close();
-        Navigator.pop(context, isSuccess);
-      });
+      isUserLoggedIn = true;
+      close().then((_) => _onUserLogin());
     }
+  }
+
+  @override
+  void onExit() {
+    if (isUserLoggedIn) {
+      return;
+    }
+    Navigator.pop(_context, false);
   }
 }

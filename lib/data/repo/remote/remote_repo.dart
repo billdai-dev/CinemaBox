@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
+import 'package:cinema_box/data/repo/model/response/account_state_res.dart';
+import 'package:cinema_box/data/repo/model/response/create_session_id_res.dart';
 import 'package:cinema_box/data/repo/model/response/movie_detail_res.dart';
 import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
@@ -11,12 +13,20 @@ abstract class RemoteRepoContract {
 
   Future<AccessTokenRes> createAccessToken(String requestToken);
 
+  Future<CreateSessionIdRes> createSessionId(String accessToken);
+
   Future<MoviePosterInfoListRes> getNowPlayingMovies(int page);
 
   Future<MoviePosterInfoListRes> getUpcomingMovies(int page);
 
   Future<MovieDetailRes> getMovieDetail(int movieId,
       {List<String> appendToResponse, bool isChinese = true});
+
+  Future<AccountStateRes> getAccountState(int movieId);
+
+  Future<MoviePosterInfoListRes> getFavoriteMovies(int page);
+
+  Future<bool> markAsFavorite(int movieId, bool isFavorite);
 }
 
 class RemoteRepo implements RemoteRepoContract {
@@ -28,7 +38,9 @@ class RemoteRepo implements RemoteRepoContract {
 
   static RemoteRepo get remoteRepo => _remoteRepo;
 
-  final Completer<String> accessTokenCache = Completer();
+  Completer<String> accessTokenCache = Completer();
+  Completer<String> accountIdCache = Completer();
+  Completer<String> sessionIdCache = Completer();
 
   Dio _dioV3;
   Dio _dioV4;
@@ -36,9 +48,6 @@ class RemoteRepo implements RemoteRepoContract {
   String _apiKeyV3 = "60ec67cdfd3973f8430814b7217fa490";
   String _apiAccessToken =
       "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2MGVjNjdjZGZkMzk3M2Y4NDMwODE0YjcyMTdmYTQ5MCIsInN1YiI6IjVjYjU5NDg3YzNhMzY4NmFlYjgxNWM3OCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.D8SYlMu04VCxhDi1N3aN0I8betW_4SLRMTxr4aopYQs";
-
-  //String _accessToken;
-  String _sessionId;
 
   RemoteRepo._() {
     _initDio();
@@ -59,7 +68,29 @@ class RemoteRepo implements RemoteRepoContract {
       data: {"request_token": requestToken},
     ).then((response) {
       AccessTokenRes res = AccessTokenRes.fromJson(response.data);
+      if (accessTokenCache.isCompleted) {
+        accessTokenCache = Completer();
+      }
       accessTokenCache.complete(res.accessToken);
+      if (accountIdCache.isCompleted) {
+        accountIdCache = Completer();
+      }
+      accountIdCache.complete(res.accountId);
+      return res;
+    });
+  }
+
+  @override
+  Future<CreateSessionIdRes> createSessionId(String accessToken) {
+    return _dioV3.post(
+      "/authentication/session/convert/4",
+      data: {"access_token": accessToken},
+    ).then((response) {
+      CreateSessionIdRes res = CreateSessionIdRes.fromJson(response.data);
+      if (sessionIdCache.isCompleted) {
+        sessionIdCache = Completer();
+      }
+      sessionIdCache.complete(res.sessionId);
       return res;
     });
   }
@@ -88,16 +119,59 @@ class RemoteRepo implements RemoteRepoContract {
     ).then((response) => MoviePosterInfoListRes.fromJson(response.data));
   }
 
-  /*Future<CreateSessionRes> createSession(String accessToken) {
-    return _dioV3.post(
-      "/authentication/session/convert/4",
-      data: {"access_token": accessToken},
-    ).then((response) {
-      CreateSessionRes res = CreateSessionRes.fromJson(response.data);
-      _sessionId = res.sessionId;
-      return res;
+  @override
+  Future<MovieDetailRes> getMovieDetail(int movieId,
+      {List<String> appendToResponse, bool isChinese = true}) {
+    Map<String, dynamic> queryParams = {};
+    if (isChinese) {
+      queryParams.putIfAbsent("language", () => _languageCode_tw);
+      queryParams.putIfAbsent("region", () => _regionCode_tw);
+    }
+    if (appendToResponse != null && appendToResponse.isNotEmpty) {
+      queryParams.putIfAbsent(
+        "append_to_response",
+        () => appendToResponse.join(","),
+      );
+    }
+    return _dioV3
+        .get("/movie/$movieId", queryParameters: queryParams)
+        .then((response) => MovieDetailRes.fromJson(response.data));
+  }
+
+  @override
+  Future<AccountStateRes> getAccountState(int movieId) async {
+    String sessionId = await sessionIdCache.future;
+    if (sessionId == null || movieId == null) {
+      return null;
+    }
+    return _dioV3.get("/movie/$movieId/account_states", queryParameters: {
+      "session_id": sessionId
+    }).then((response) => AccountStateRes.fromJson(response.data));
+  }
+
+  @override
+  Future<MoviePosterInfoListRes> getFavoriteMovies(int page) async {
+    String accountId = await accountIdCache.future;
+    return _dioV4.get(
+      "/account/$accountId/movie/favorites",
+      queryParameters: {"page": page, "sort_by": "created_at.desc"},
+    ).then((response) => MoviePosterInfoListRes.fromJson(response.data));
+  }
+
+  @override
+  Future<bool> markAsFavorite(int movieId, bool isFavorite) async {
+    String accountId = await accountIdCache.future;
+    String sessionId = await sessionIdCache.future;
+    return _dioV3.post("/account/$accountId/favorite", queryParameters: {
+      "session_id": sessionId
+    }, data: {
+      "media_type": "movie",
+      "media_id": movieId,
+      "favorite": isFavorite,
+    }).then((response) {
+      return response.statusCode >= 200 && response.statusCode < 400;
     });
-  }*/
+  }
 
   void _initDio() {
     BaseOptions baseOptions =
@@ -126,24 +200,5 @@ class RemoteRepo implements RemoteRepoContract {
         }
         return options;
       }));
-  }
-
-  @override
-  Future<MovieDetailRes> getMovieDetail(int movieId,
-      {List<String> appendToResponse, bool isChinese = true}) {
-    Map<String, dynamic> queryParams = {};
-    if (isChinese) {
-      queryParams.putIfAbsent("language", () => _languageCode_tw);
-      queryParams.putIfAbsent("region", () => _regionCode_tw);
-    }
-    if (appendToResponse != null && appendToResponse.isNotEmpty) {
-      queryParams.putIfAbsent(
-        "append_to_response",
-        () => appendToResponse.join(","),
-      );
-    }
-    return _dioV3
-        .get("/movie/$movieId", queryParameters: queryParams)
-        .then((response) => MovieDetailRes.fromJson(response.data));
   }
 }

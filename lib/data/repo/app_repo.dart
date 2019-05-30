@@ -1,5 +1,7 @@
 import 'package:cinema_box/data/repo/model/local/local_repo.dart';
 import 'package:cinema_box/data/repo/model/response/access_token_res.dart';
+import 'package:cinema_box/data/repo/model/response/account_state_res.dart';
+import 'package:cinema_box/data/repo/model/response/create_session_id_res.dart';
 import 'package:cinema_box/data/repo/model/response/movie_detail_res.dart';
 import 'package:cinema_box/data/repo/model/response/request_token_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
@@ -17,9 +19,31 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   AppRepo._() {
     _remoteRepo = RemoteRepo.remoteRepo;
     _localRepo = LocalRepo.localRepo;
-    _localRepo.loadAccessToken().then((token) {
+    _localRepo.loadAccessToken().then((token) async {
       _remoteRepo.accessTokenCache.complete(token);
+      await _localRepo.loadAccountId().then((accountId) {
+        _remoteRepo.accountIdCache.complete(accountId);
+      });
+      await _localRepo.loadSessionId().then((sessionId) {
+        _remoteRepo.sessionIdCache.complete(sessionId);
+      });
     });
+  }
+
+  Future<bool> isUserLoggedIn() async {
+    String accessToken = await loadAccessToken();
+    if (accessToken == null || accessToken.isEmpty) {
+      return false;
+    }
+    String accountId = await loadSessionId();
+    if (accountId == null || accountId.isEmpty) {
+      return false;
+    }
+    String sessionId = await loadSessionId();
+    if (sessionId == null || sessionId.isEmpty) {
+      return false;
+    }
+    return true;
   }
 
   @override
@@ -33,6 +57,26 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   }
 
   @override
+  Future<bool> saveAccountId(String accountId) {
+    return _localRepo.saveAccountId(accountId);
+  }
+
+  @override
+  Future<String> loadAccountId() {
+    return _localRepo.loadAccountId();
+  }
+
+  @override
+  Future<bool> saveSessionId(String sessionId) {
+    return _localRepo.saveSessionId(sessionId);
+  }
+
+  @override
+  Future<String> loadSessionId() {
+    return _localRepo.loadSessionId();
+  }
+
+  @override
   Future<RequestTokenRes> createRequestToken({String apiKey}) {
     return _remoteRepo.createRequestToken(apiKey: apiKey);
   }
@@ -40,8 +84,17 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
   @override
   Future<AccessTokenRes> createAccessToken(String requestToken) async {
     AccessTokenRes response = await _remoteRepo.createAccessToken(requestToken);
-    String accessToken = response.accessToken;
-    await _localRepo.saveAccessToken(accessToken);
+    await _localRepo.saveAccessToken(response.accessToken);
+    await _localRepo.saveAccountId(response.accountId);
+    await createSessionId(response.accessToken);
+    return response;
+  }
+
+  @override
+  Future<CreateSessionIdRes> createSessionId(String accessToken) async {
+    CreateSessionIdRes response =
+        await _remoteRepo.createSessionId(accessToken);
+    await _localRepo.saveSessionId(response.sessionId);
     return response;
   }
 
@@ -60,5 +113,20 @@ class AppRepo implements LocalRepoContract, RemoteRepoContract {
       {List<String> appendToResponse, bool isChinese = true}) {
     return _remoteRepo.getMovieDetail(movieId,
         appendToResponse: appendToResponse, isChinese: isChinese);
+  }
+
+  @override
+  Future<AccountStateRes> getAccountState(int movieId) {
+    return _remoteRepo.getAccountState(movieId);
+  }
+
+  @override
+  Future<MoviePosterInfoListRes> getFavoriteMovies(int page) {
+    return _remoteRepo.getFavoriteMovies(page);
+  }
+
+  @override
+  Future<bool> markAsFavorite(int movieId, bool isFavorite) {
+    return _remoteRepo.markAsFavorite(movieId, isFavorite);
   }
 }
