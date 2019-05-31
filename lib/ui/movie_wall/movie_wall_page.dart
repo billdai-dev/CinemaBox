@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:bloc_pattern/bloc_pattern.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 import 'package:cinema_box/ui/custom_widget/custom_app_bar.dart';
@@ -9,8 +10,6 @@ import 'package:cinema_box/ui/custom_widget/custom_widget.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_page.dart';
 import 'package:cinema_box/ui/movie_wall/movie_wall_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_advanced_networkimage/provider.dart';
-import 'package:flutter_advanced_networkimage/transition.dart';
 
 class MovieWallPage extends StatefulWidget {
   static const String routeName = "/movieWall";
@@ -354,12 +353,13 @@ class _MoviePosterState extends State<MoviePoster> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       elevation: 10,
-                      child: TransitionToImage(
-                        image: AdvancedNetworkImage(
-                          "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
-                        ),
+                      child: CachedNetworkImage(
+                        imageUrl:
+                            "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
                         fit: BoxFit.cover,
-                        loadingWidget: Container(color: Colors.black12),
+                        placeholder: (context, url) {
+                          return Container(color: Colors.black12);
+                        },
                       ),
                     ),
                     Material(

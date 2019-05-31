@@ -1,4 +1,5 @@
 import 'package:bloc_pattern/bloc_pattern.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cinema_box/data/repo/model/credit.dart';
 import 'package:cinema_box/data/repo/model/response/movie_detail_res.dart';
 import 'package:cinema_box/data/repo/model/video.dart';
@@ -7,12 +8,11 @@ import 'package:cinema_box/ui/app_bloc.dart';
 import 'package:cinema_box/ui/custom_widget/custom_app_bar.dart';
 import 'package:cinema_box/ui/custom_widget/custom_widget.dart';
 import 'package:cinema_box/ui/custom_widget/login_prompt_dialog.dart';
+import 'package:cinema_box/ui/favorite/favorite_movie_bloc.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_bloc.dart';
 import 'package:cinema_box/ui/youtube_video/youtube_video_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_advanced_networkimage/provider.dart';
-import 'package:flutter_advanced_networkimage/transition.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class MovieDetailPage extends StatefulWidget {
@@ -46,20 +46,19 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
     movieId = args[MovieDetailPage.movieIdParam] ?? 0;
     posterUrl = args[MovieDetailPage.posterUrlParam] ?? "";
 
-    //MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
     bloc.fetchMovieDetail.add(movieId);
   }
 
   @override
   void dispose() {
     bloc.dispose();
+    segmentedControlIndex.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     TextTheme textTheme = Theme.of(context).textTheme;
-    //MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
 
     return Scaffold(
       appBar: CustomAppBar(),
@@ -157,10 +156,8 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
         tag: posterHeroTag,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: TransitionToImage(
-            image: AdvancedNetworkImage(
-              "${RemoteRepo.imageBaseUrl}$posterUrl",
-            ),
+          child: CachedNetworkImage(
+            imageUrl: "${RemoteRepo.imageBaseUrl}$posterUrl",
             fit: BoxFit.cover,
           ),
         ),
@@ -169,8 +166,6 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
   }
 
   Widget _buildTitles(MovieDetailRes data) {
-    //MovieDetailBloc bloc = BlocProvider.of<MovieDetailBloc>(context);
-
     String rating = (data.voteAverage / 2).toStringAsPrecision(2);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -201,15 +196,16 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                       await bloc.getFavoriteState();
                     }
                     return;
-                    /*bool isLoginSuccess = await appBloc.appNavKey.currentState
-                        .pushNamed<dynamic>(LoginWebViewPage.routeName);
-                    if (!(isLoginSuccess ?? false)) {
-                      return;
-                    }*/
                   }
+                  FavoriteMovieBloc favoriteBloc =
+                      BlocProviderList.of<FavoriteMovieBloc>(context);
 
-                  bloc.setAsFavorite().then((isSuccess) {
-                    if (!isSuccess) {
+                  favoriteBloc
+                      .setAsFavorite(data.id, !isFavorite)
+                      .then((isSuccess) {
+                    if (isSuccess) {
+                      bloc.isFavorite.add(!isFavorite);
+                    } else {
                       throw AssertionError("Set as favorite failed");
                     }
                   }).catchError(
@@ -350,9 +346,8 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                   CircleAvatar(
                     radius: 32,
                     backgroundColor: Colors.black12,
-                    backgroundImage: AdvancedNetworkImage(
+                    backgroundImage: CachedNetworkImageProvider(
                       "${RemoteRepo.imageBaseUrl}${casts[index].profilePath}",
-                      useDiskCache: true,
                     ),
                   ),
                   SizedBox(height: 5),

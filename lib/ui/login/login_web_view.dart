@@ -18,11 +18,17 @@ class _LoginWebViewPageState extends State<LoginWebViewPage> {
   bool isBrowserOpened = false;
   bool isUserLoggingIn = false;
   InAppBrowser browser;
+  LoginBloc bloc;
+
+  @override
+  void initState() {
+    super.initState();
+    bloc = LoginBloc();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    LoginBloc bloc = BlocProvider.of<LoginBloc>(context);
     bloc.generateRequestToken().then((token) async {
       await browser?.open(url: "$authUrl$token", options: {
         "clearCache": true,
@@ -49,6 +55,7 @@ class _LoginWebViewPageState extends State<LoginWebViewPage> {
     if (browser.isOpened()) {
       browser?.close();
     }
+    bloc.dispose();
     super.dispose();
   }
 

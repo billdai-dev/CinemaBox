@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_pattern/bloc_pattern.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cinema_box/data/repo/model/response/movie_poster_info_list_res.dart';
 import 'package:cinema_box/data/repo/remote/remote_repo.dart';
 import 'package:cinema_box/ui/app_bloc.dart';
@@ -10,8 +11,6 @@ import 'package:cinema_box/ui/custom_widget/login_prompt_dialog.dart';
 import 'package:cinema_box/ui/favorite/favorite_movie_bloc.dart';
 import 'package:cinema_box/ui/movie_detail/movie_detail_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_advanced_networkimage/provider.dart';
-import 'package:flutter_advanced_networkimage/transition.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class FavoriteMoviePage extends StatefulWidget {
@@ -31,12 +30,6 @@ class _FavoriteMoviePageState extends State<FavoriteMoviePage> {
       body: StreamBuilder<bool>(
           stream: appBloc.isLoggedIn,
           builder: (context, snapshot) {
-            if (snapshot.data == true) {
-              FavoriteMovieBloc bloc =
-                  BlocProvider.of<FavoriteMovieBloc>(context);
-              bloc.fetchFavoriteMovies(refresh: true);
-            }
-
             bool isUserLoggedIn = snapshot.data ?? false;
             if (!isUserLoggedIn) {
               return Center(
@@ -105,7 +98,8 @@ class _FavoriteMovieListState extends State<_FavoriteMovieList> {
     scrollController.addListener(() {
       if (scrollController.position.pixels ==
           scrollController.position.maxScrollExtent - loadMoreThreshold) {
-        FavoriteMovieBloc bloc = BlocProvider.of<FavoriteMovieBloc>(context);
+        FavoriteMovieBloc bloc =
+            BlocProviderList.of<FavoriteMovieBloc>(context);
         bloc.fetchFavoriteMovies();
       }
     });
@@ -119,7 +113,7 @@ class _FavoriteMovieListState extends State<_FavoriteMovieList> {
 
   @override
   Widget build(BuildContext context) {
-    FavoriteMovieBloc bloc = BlocProvider.of<FavoriteMovieBloc>(context);
+    FavoriteMovieBloc bloc = BlocProviderList.of<FavoriteMovieBloc>(context);
 
     return StreamBuilder<MoviePosterInfoListRes>(
       stream: bloc.favoriteMovies,
@@ -158,6 +152,7 @@ class _FavoriteMovieListState extends State<_FavoriteMovieList> {
             });
           },
           child: ListView.separated(
+            key: PageStorageKey(widget._posterType),
             controller: scrollController,
             physics:
                 ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
@@ -191,21 +186,17 @@ class _FavoriteMovieListState extends State<_FavoriteMovieList> {
                     children: <Widget>[
                       Hero(
                         tag: "FavoriteMovie_${movie.id}",
-                        child: TransitionToImage(
-                          width: 115,
-                          height: 170,
-                          borderRadius: BorderRadius.circular(5),
-                          fit: BoxFit.cover,
-                          loadingWidget: Container(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
                             width: 115,
                             height: 170,
-                            decoration: BoxDecoration(
-                              color: Colors.black12,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                          ),
-                          image: AdvancedNetworkImage(
-                            "${RemoteRepo.imageBaseUrl}${movie.posterPath}",
+                            fit: BoxFit.cover,
+                            imageUrl:
+                                "${RemoteRepo.imageBaseUrl}${movie.posterPath}",
+                            placeholder: (context, url) {
+                              return Container(width: 115, height: 170);
+                            },
                           ),
                         ),
                       ),

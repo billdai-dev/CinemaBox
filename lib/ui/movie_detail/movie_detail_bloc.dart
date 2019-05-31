@@ -17,7 +17,6 @@ class MovieDetailBloc extends BlocBase {
   final BehaviorSubject<bool> isFavorite = BehaviorSubject();
 
   MovieDetailBloc({AppRepo repo}) : _repo = repo ?? AppRepo.repo {
-    print("BLOC REBUILD");
     _fetchMovieDetail.listen((movieId) {
       Future<MovieDetailRes> chineseMovieDetail = _repo.getMovieDetail(
         movieId,

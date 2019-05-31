@@ -39,6 +39,8 @@ class FavoriteMovieBloc extends BlocBase {
         _favoriteMovies.add(res);
       });
     });
+
+    fetchFavoriteMovies(refresh: true);
   }
 
   void fetchFavoriteMovies({bool refresh = false}) {
@@ -51,6 +53,20 @@ class FavoriteMovieBloc extends BlocBase {
       return;
     }
     _fetchFavoriteMovies.add(Pair(false, currentPage + 1));
+  }
+
+  Future<bool> setAsFavorite(int movieId, bool shouldSetFavorite) async {
+    if (movieId == null || shouldSetFavorite == null) {
+      return false;
+    }
+    bool setFavoriteSuccess =
+        await _repo.markAsFavorite(movieId, shouldSetFavorite);
+    if (setFavoriteSuccess) {
+      MoviePosterInfoListRes favoriteMovieData = _favoriteMovies.value;
+      favoriteMovieData.results.removeWhere((movie) => movie.id == movieId);
+      _favoriteMovies.add(favoriteMovieData);
+    }
+    return setFavoriteSuccess;
   }
 
   @override

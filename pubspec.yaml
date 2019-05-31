@@ -33,7 +33,7 @@ dependencies:
   flutter_inappbrowser: ^1.1.3
   font_awesome_flutter: ^8.4.0
   youtube_player_flutter: ^1.1.0
-  flutter_advanced_networkimage: ^0.4.15
+  cached_network_image: ^0.8.0
 
 dev_dependencies:
   flutter_test:
