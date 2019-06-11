@@ -19,6 +19,9 @@ class FavoriteMovieBloc extends BlocBase {
 
   int get favoriteMoviesLength => _favoriteMovies.value?.results?.length ?? 0;
 
+  int _lastRemovedMovieIndex;
+  MoviePosterInfo _lastRemovedMovie;
+
   FavoriteMovieBloc({AppRepo repo}) : _repo = repo ?? AppRepo.repo {
     _fetchFavoriteMoviesStream = Observable(_fetchFavoriteMovies.stream);
     _fetchFavoriteMoviesStream.distinct((prev, next) {
@@ -59,12 +62,32 @@ class FavoriteMovieBloc extends BlocBase {
     if (movieId == null || shouldSetFavorite == null) {
       return false;
     }
+    MoviePosterInfoListRes favoriteMovieData = _favoriteMovies.value;
+
+    if (!shouldSetFavorite) {
+      for (int i = 0; i < favoriteMovieData.results.length; i++) {
+        MoviePosterInfo movie = favoriteMovieData.results[i];
+        if (movieId == movie.id) {
+          _lastRemovedMovie = movie;
+          _lastRemovedMovieIndex = i;
+          favoriteMovieData.results.removeAt(i);
+          break;
+        }
+      }
+      _favoriteMovies.add(favoriteMovieData);
+    }
+
     bool setFavoriteSuccess =
         await _repo.markAsFavorite(movieId, shouldSetFavorite);
     if (setFavoriteSuccess) {
-      MoviePosterInfoListRes favoriteMovieData = _favoriteMovies.value;
-      favoriteMovieData.results.removeWhere((movie) => movie.id == movieId);
-      _favoriteMovies.add(favoriteMovieData);
+      _lastRemovedMovie = null;
+      _lastRemovedMovieIndex = null;
+    } else {
+      if (movieId == _lastRemovedMovie?.id) {
+        favoriteMovieData.results
+            .insert(_lastRemovedMovieIndex, _lastRemovedMovie);
+        _favoriteMovies.add(favoriteMovieData);
+      }
     }
     return setFavoriteSuccess;
   }

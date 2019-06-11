@@ -166,94 +166,139 @@ class _FavoriteMovieListState extends State<_FavoriteMovieList> {
                 );
               }
               MoviePosterInfo movie = movies[index];
-              return GestureDetector(
+              return _FavoriteMovieItem(
+                widget._posterType,
+                movie,
                 key: ValueKey("${widget._posterType.toString()}${movie.id}"),
-                onTap: () {
-                  int movieId = movies[index].id;
-                  Navigator.of(context).pushNamed(
-                    MovieDetailPage.routeName,
-                    arguments: {
-                      MovieDetailPage.movieIdParam: movieId,
-                      MovieDetailPage.posterHeroTagParam:
-                          "FavoriteMovie_$movieId",
-                      MovieDetailPage.posterUrlParam: movie.posterPath,
-                    },
-                  );
-                },
-                child: Container(
-                  height: 210,
-                  child: Row(
-                    children: <Widget>[
-                      Hero(
-                        tag: "FavoriteMovie_${movie.id}",
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: CachedNetworkImage(
-                            width: 115,
-                            height: 170,
-                            fit: BoxFit.cover,
-                            imageUrl:
-                                "${RemoteRepo.imageBaseUrl}${movie.posterPath}",
-                            placeholder: (context, url) {
-                              return Container(width: 115, height: 170);
-                            },
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Container(
-                              alignment: Alignment.centerRight,
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                icon: Icon(Icons.favorite,
-                                    color: Colors.redAccent),
-                                onPressed: () {},
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              "上映時間：${movie.releaseDate.replaceAll("-", " / ")}",
-                            ),
-                            Divider(height: 5),
-                            Text(movie.title),
-                            Text(movie.originalTitle),
-                            if (widget._posterType == _MoviePoserType.inTheater)
-                              Divider(height: 5),
-                            if (widget._posterType == _MoviePoserType.inTheater)
-                              Row(
-                                children: <Widget>[
-                                  Rating(movie.voteAverage / 2),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    "${(movie.voteAverage / 2).toStringAsPrecision(2)}",
-                                    //style: textTheme.body1.copyWith(color: Colors.grey),
-                                  ),
-                                  SizedBox(width: 2),
-                                  Text(
-                                    "(${movie.voteCount})",
-                                    //style: textTheme.body1.copyWith(color: Colors.grey),
-                                  ),
-                                  Spacer(),
-                                  //CertificationTag(),
-                                ],
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               );
             },
             separatorBuilder: (context, index) => Divider(height: 0),
           ),
         );
       },
+    );
+  }
+}
+
+class _FavoriteMovieItem extends StatefulWidget {
+  final _MoviePoserType _posterType;
+  final MoviePosterInfo _movie;
+
+  _FavoriteMovieItem(this._posterType, this._movie, {Key key})
+      : super(key: key);
+
+  @override
+  __FavoriteMovieItemState createState() => __FavoriteMovieItemState();
+}
+
+class __FavoriteMovieItemState extends State<_FavoriteMovieItem>
+    with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+
+  @override
+  void initState() {
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 200),
+    );
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizeTransition(
+      sizeFactor: Tween(begin: 1.0, end: 0.0).animate(_controller),
+      child: GestureDetector(
+        onTap: () {
+          int movieId = widget._movie.id;
+          Navigator.of(context).pushNamed(
+            MovieDetailPage.routeName,
+            arguments: {
+              MovieDetailPage.movieIdParam: movieId,
+              MovieDetailPage.posterHeroTagParam: "FavoriteMovie_$movieId",
+              MovieDetailPage.posterUrlParam: widget._movie.posterPath,
+            },
+          );
+        },
+        child: Container(
+          height: 210,
+          child: Row(
+            children: <Widget>[
+              Hero(
+                tag: "FavoriteMovie_${widget._movie.id}",
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: CachedNetworkImage(
+                    width: 115,
+                    height: 170,
+                    fit: BoxFit.cover,
+                    imageUrl:
+                        "${RemoteRepo.imageBaseUrl}${widget._movie.posterPath}",
+                    placeholder: (context, url) {
+                      return Container(width: 115, height: 170);
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.favorite, color: Colors.redAccent),
+                        onPressed: () async {
+                          await _controller.forward();
+                          FavoriteMovieBloc bloc =
+                              BlocProviderList.of<FavoriteMovieBloc>(context);
+                          bloc.setAsFavorite(widget._movie.id, false);
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "上映時間：${widget._movie.releaseDate.replaceAll("-", " / ")}",
+                    ),
+                    Divider(height: 5),
+                    Text(widget._movie.title),
+                    Text(widget._movie.originalTitle),
+                    if (widget._posterType == _MoviePoserType.inTheater)
+                      Divider(height: 5),
+                    if (widget._posterType == _MoviePoserType.inTheater)
+                      Row(
+                        children: <Widget>[
+                          Rating(widget._movie.voteAverage / 2),
+                          SizedBox(width: 4),
+                          Text(
+                            "${(widget._movie.voteAverage / 2).toStringAsPrecision(2)}",
+                            //style: textTheme.body1.copyWith(color: Colors.grey),
+                          ),
+                          SizedBox(width: 2),
+                          Text(
+                            "(${widget._movie.voteCount})",
+                            //style: textTheme.body1.copyWith(color: Colors.grey),
+                          ),
+                          Spacer(),
+                          //CertificationTag(),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

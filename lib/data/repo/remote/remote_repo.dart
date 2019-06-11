@@ -100,9 +100,9 @@ class RemoteRepo implements RemoteRepoContract {
     return _dioV3.get(
       "/movie/now_playing",
       queryParameters: {
-        "language": _languageCode_tw,
+        //"language": _languageCode_tw,
         "page": page,
-        "region": _regionCode_tw,
+        //"region": _regionCode_tw,
       },
     ).then((response) => MoviePosterInfoListRes.fromJson(response.data));
   }
@@ -112,9 +112,9 @@ class RemoteRepo implements RemoteRepoContract {
     return _dioV3.get(
       "/movie/upcoming",
       queryParameters: {
-        "language": _languageCode_tw,
+        //"language": _languageCode_tw,
         "page": page,
-        "region": _regionCode_tw,
+        //"region": _regionCode_tw,
       },
     ).then((response) => MoviePosterInfoListRes.fromJson(response.data));
   }
